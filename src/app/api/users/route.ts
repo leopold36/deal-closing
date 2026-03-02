@@ -10,7 +10,10 @@ export async function GET() {
     return NextResponse.json(allUsers);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: message, DATABASE_URL_SET: !!process.env.DATABASE_URL }, { status: 500 });
+    const cause = error instanceof Error && error.cause instanceof Error ? error.cause.message : undefined;
+    const dbUrl = process.env.DATABASE_URL || "NOT SET";
+    const masked = dbUrl.replace(/:([^@]+)@/, ':***@');
+    return NextResponse.json({ error: message, cause, dbUrl: masked }, { status: 500 });
   }
 }
 

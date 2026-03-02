@@ -46,8 +46,8 @@ Current user ID: ${userId}
 
 When you extract information from a document or conversation:
 1. Tell the user what you found and for which field
-2. Ask for confirmation before updating the field
-3. Only call update_deal_field after the user confirms
+2. Use suggest_deal_field to create a suggestion — the user will see it in the form and can accept or dismiss it via the UI
+3. Do NOT ask for confirmation before suggesting — just suggest the value
 
 You can use get_deal_status to see the current state of the deal.
 Be concise and professional.`;

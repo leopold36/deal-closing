@@ -1,7 +1,7 @@
 import { tool, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod/v4";
 import { db } from "@/db";
-import { deals, auditLogs, notifications, users } from "@/db/schema";
+import { deals, auditLogs, notifications, users, suggestions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 
@@ -22,9 +22,9 @@ const getDealStatus = tool(
   }
 );
 
-const updateDealField = tool(
-  "update_deal_field",
-  "Update a specific field on the deal form. Only use after the user confirms the value.",
+const suggestDealField = tool(
+  "suggest_deal_field",
+  "Suggest a value for a specific field on the deal form. The value will appear as a suggestion that the user can accept or dismiss. Do NOT tell the user to confirm — the UI handles that via accept/dismiss buttons.",
   {
     dealId: z.string().describe("The deal ID"),
     field: z
@@ -37,8 +37,8 @@ const updateDealField = tool(
         "settlementDate",
         "notes",
       ])
-      .describe("The field to update"),
-    value: z.string().describe("The new value for the field"),
+      .describe("The field to suggest a value for"),
+    value: z.string().describe("The suggested value for the field"),
     userId: z.string().describe("The user ID performing the action"),
     documentId: z
       .string()
@@ -55,14 +55,19 @@ const updateDealField = tool(
       return { content: [{ type: "text" as const, text: "Deal not found" }] };
     }
 
-    const oldValue = (deal as Record<string, unknown>)[field];
     const now = new Date().toISOString();
-    const parsedValue =
-      field === "investmentAmount" ? parseFloat(value) : value;
 
-    db.update(deals)
-      .set({ [field]: parsedValue, updatedAt: now })
-      .where(eq(deals.id, dealId))
+    db.insert(suggestions)
+      .values({
+        id: uuid(),
+        dealId,
+        fieldName: field,
+        suggestedValue: value,
+        documentId: documentId ?? null,
+        documentPage: documentPage ?? null,
+        status: "pending",
+        createdAt: now,
+      })
       .run();
 
     db.insert(auditLogs)
@@ -70,10 +75,10 @@ const updateDealField = tool(
         id: uuid(),
         dealId,
         userId,
-        action: "AGENT_EXTRACTED",
+        action: "AGENT_SUGGESTED",
         fieldName: field,
-        oldValue: oldValue != null ? String(oldValue) : null,
-        newValue: String(value),
+        oldValue: null,
+        newValue: value,
         source: "agent",
         documentId: documentId ?? null,
         documentPage: documentPage ?? null,
@@ -83,7 +88,10 @@ const updateDealField = tool(
 
     return {
       content: [
-        { type: "text" as const, text: `Updated ${field} to "${value}"` },
+        {
+          type: "text" as const,
+          text: `Suggested "${value}" for ${field}. The user will see this in the suggestion column and can accept or dismiss it.`,
+        },
       ],
     };
   }
@@ -132,5 +140,5 @@ const sendNotification = tool(
 export const agentMcpServer = createSdkMcpServer({
   name: "deal-closing-tools",
   version: "1.0.0",
-  tools: [getDealStatus, updateDealField, sendNotification],
+  tools: [getDealStatus, suggestDealField, sendNotification],
 });

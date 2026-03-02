@@ -47,3 +47,8 @@ uploads/*
 # database
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
+
+# logs
+excalidraw.log

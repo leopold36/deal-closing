@@ -22,7 +22,7 @@ export default function SnowflakePage() {
             <div className="text-center">
               <div className="border rounded-md p-3 bg-blue-50">
                 <p className="text-sm font-medium">App Database</p>
-                <p className="text-xs text-muted-foreground">SQLite</p>
+                <p className="text-xs text-muted-foreground">PostgreSQL</p>
               </div>
             </div>
             <div className="text-lg text-muted-foreground">&rarr;</div>
@@ -206,7 +206,7 @@ ORDER BY d.DEAL_NAME, al.TIMESTAMP;`}</pre>
           <Separator />
           <div>
             <h3 className="text-sm font-medium">Schema Mapping</h3>
-            <p className="text-muted-foreground">The app's SQLite tables map directly to Snowflake tables. Field names are converted from camelCase to UPPER_SNAKE_CASE. User IDs are resolved to email addresses for human readability in the warehouse. Timestamps are stored as TIMESTAMP_NTZ (UTC).</p>
+            <p className="text-muted-foreground">The app's PostgreSQL tables map directly to Snowflake tables. Field names are converted from camelCase to UPPER_SNAKE_CASE. User IDs are resolved to email addresses for human readability in the warehouse. Timestamps are stored as TIMESTAMP_NTZ (UTC).</p>
           </div>
         </CardContent>
       </Card>

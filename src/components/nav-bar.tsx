@@ -10,6 +10,7 @@ const navItems = [
   { label: "Deals", href: "/deals" },
   { label: "My Tasks", href: "/my-tasks" },
   { label: "Snowflake Integration", href: "/snowflake" },
+  { label: "Database Schema", href: "/schema" },
   { label: "Admin", href: "/admin" },
 ];
 

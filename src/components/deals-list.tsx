@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { Deal } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
-import { Trash2 } from "lucide-react";
+import { Trash2, ChevronRight } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -23,6 +23,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export function DealsList() {
+  const router = useRouter();
   const { data: deals = [], isLoading, mutate: mutateDeals } = useSWR<Deal[]>("/api/deals", fetcher);
 
   const handleDelete = async (e: React.MouseEvent, dealId: string) => {
@@ -49,31 +50,21 @@ export function DealsList() {
       <thead>
         <tr className="border-b bg-muted/30">
           <th className="text-left px-3 py-2">Deal Name</th>
-          <th className="text-left px-3 py-2">Counterparty</th>
-          <th className="text-left px-3 py-2">Ticker</th>
-          <th className="text-right px-3 py-2">Amount</th>
           <th className="text-left px-3 py-2">Status</th>
           <th className="text-right px-3 py-2">Updated</th>
           <th className="px-3 py-2 w-10"></th>
+          <th className="px-3 py-2 w-8"></th>
         </tr>
       </thead>
       <tbody>
         {deals.map((deal) => (
-          <tr key={deal.id} className="cursor-pointer">
-            <td className="px-3">
-              <Link
-                href={`/deals/${deal.id}`}
-                className="font-medium text-primary hover:underline"
-              >
-                {deal.name}
-              </Link>
-            </td>
-            <td className="px-3 text-muted-foreground">{deal.counterparty || "\u2014"}</td>
-            <td className="px-3 font-mono text-muted-foreground">{deal.equityTicker || "\u2014"}</td>
-            <td className="px-3 text-right font-mono tabular-nums">
-              {deal.investmentAmount
-                ? `$${deal.investmentAmount.toLocaleString()}`
-                : "\u2014"}
+          <tr
+            key={deal.id}
+            onClick={() => router.push(`/deals/${deal.id}`)}
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+          >
+            <td className="px-3 font-medium">
+              {deal.name}
             </td>
             <td className="px-3">
               <Badge className={`${statusColors[deal.status]} text-[11px] font-medium border px-1.5 py-0`} variant="secondary">
@@ -91,6 +82,9 @@ export function DealsList() {
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
+            </td>
+            <td className="px-1 text-muted-foreground/40">
+              <ChevronRight className="h-4 w-4" />
             </td>
           </tr>
         ))}

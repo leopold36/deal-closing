@@ -132,42 +132,89 @@ export function ChatPanel({ dealId }: Props) {
     const file = e.target.files?.[0];
     if (!file || !currentUser) return;
 
+    // Reset file input so the same file can be re-uploaded
+    e.target.value = "";
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("userId", currentUser.id);
 
-    const res = await fetch(`/api/deals/${dealId}/documents`, {
-      method: "POST",
-      body: formData,
-    });
-    const doc = await res.json();
+    try {
+      const res = await fetch(`/api/deals/${dealId}/documents`, {
+        method: "POST",
+        body: formData,
+      });
 
-    mutate(`/api/deals/${dealId}/documents`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Upload failed" }));
+        console.error("Document upload failed:", err);
+        await sendMessage(
+          `I tried to upload "${file.name}" but the upload failed. Please try again.`
+        );
+        return;
+      }
 
-    await sendMessage(
-      `I've uploaded a document: "${file.name}" (document ID: ${doc.id}). Please read it and tell me which deal fields you can extract from it.`
-    );
+      const doc = await res.json();
+
+      if (!doc.id) {
+        console.error("Upload response missing document ID:", doc);
+        await sendMessage(
+          `I tried to upload "${file.name}" but something went wrong. Please try again.`
+        );
+        return;
+      }
+
+      mutate(`/api/deals/${dealId}/documents`);
+
+      await sendMessage(
+        `I've uploaded a document: "${file.name}" (document ID: ${doc.id}). Please read it and tell me which deal fields you can extract from it.`
+      );
+    } catch (error) {
+      console.error("Document upload error:", error);
+      await sendMessage(
+        `I tried to upload "${file.name}" but encountered an error. Please try again.`
+      );
+    }
   };
 
   const handleSelectSample = async (sample: SampleDocument) => {
     if (!currentUser) return;
 
-    const res = await fetch("/api/sample-documents/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sampleId: sample.id,
-        dealId,
-        userId: currentUser.id,
-      }),
-    });
-    const doc = await res.json();
+    try {
+      const res = await fetch("/api/sample-documents/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sampleId: sample.id,
+          dealId,
+          userId: currentUser.id,
+        }),
+      });
 
-    mutate(`/api/deals/${dealId}/documents`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Upload failed" }));
+        console.error("Sample upload failed:", err);
+        await sendMessage(
+          `I tried to upload the sample document "${sample.filename}" but the upload failed. Please try again.`
+        );
+        return;
+      }
 
-    await sendMessage(
-      `I've uploaded a document: "${sample.filename}" (document ID: ${doc.id}). Please read it and tell me which deal fields you can extract from it.`
-    );
+      const doc = await res.json();
+
+      if (!doc.id) {
+        console.error("Sample upload response missing document ID:", doc);
+        return;
+      }
+
+      mutate(`/api/deals/${dealId}/documents`);
+
+      await sendMessage(
+        `I've uploaded a document: "${sample.filename}" (document ID: ${doc.id}). Please read it and tell me which deal fields you can extract from it.`
+      );
+    } catch (error) {
+      console.error("Sample upload error:", error);
+    }
   };
 
   return (

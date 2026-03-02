@@ -121,7 +121,8 @@ export function UploadDialog({
           className="w-full h-8 text-xs"
           onClick={() => {
             onOpenChange(false);
-            onUploadOwn();
+            // Delay file input click so dialog has time to close
+            setTimeout(() => onUploadOwn(), 150);
           }}
           disabled={disabled || loading !== null}
         >

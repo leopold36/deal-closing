@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { DealForm } from "@/components/deal-form";
+import { ChatPanel } from "@/components/chat-panel";
 
 export default function DealDetailPage({
   params,
@@ -16,9 +17,7 @@ export default function DealDetailPage({
         <DealForm dealId={id} />
       </div>
       <div className="flex-1 flex flex-col">
-        <div className="p-4 flex items-center justify-center h-full text-muted-foreground">
-          Chat panel (coming next)
-        </div>
+        <ChatPanel dealId={id} />
       </div>
     </div>
   );

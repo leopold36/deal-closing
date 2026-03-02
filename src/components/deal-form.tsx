@@ -30,8 +30,10 @@ import {
   FileText,
   FileSpreadsheet,
   File,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DocumentViewer } from "./document-viewer";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -98,6 +100,7 @@ export function DealForm({ dealId }: Props) {
 
   const [saving, setSaving] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [viewerDoc, setViewerDoc] = useState<Document | null>(null);
 
   const handleFieldBlur = useCallback(
     async (field: string, value: string) => {
@@ -207,6 +210,24 @@ export function DealForm({ dealId }: Props) {
     mutateFieldApprovals();
   };
 
+  const handleClearSource = async (fieldName: string) => {
+    await fetch(`/api/deals/${dealId}/audit/clear-source`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fieldName }),
+    });
+    mutate(`/api/deals/${dealId}/audit`);
+  };
+
+  const handleDeleteDocument = async (doc: Document) => {
+    if (!confirm(`Delete "${doc.filename}"? This will permanently remove the file.`)) return;
+    await fetch(`/api/deals/${dealId}/documents/${doc.id}`, {
+      method: "DELETE",
+    });
+    mutate(`/api/deals/${dealId}/documents`);
+    mutate(`/api/deals/${dealId}/audit`);
+  };
+
   if (!deal) return <p className="text-muted-foreground">Loading...</p>;
 
   const isEntryPhase = deal.status === "entry" || deal.status === "rejected" || deal.status === "recalled";
@@ -222,26 +243,26 @@ export function DealForm({ dealId }: Props) {
   const getSuggestionForField = (fieldName: string) =>
     pendingSuggestions.find((s) => s.fieldName === fieldName);
 
+  const getSourceDoc = (fieldName: string): Document | null => {
+    const log = auditLogs.find(
+      (l) => l.fieldName === fieldName && l.source === "agent" && l.documentId
+    );
+    if (!log?.documentId) return null;
+    return documents.find((d) => d.id === log.documentId) ?? null;
+  };
+
   const approvedCount = fieldApprovalsSet.size;
   const totalFields = DEAL_FIELDS.length;
   const uncheckedCount = totalFields - approvedCount;
   const allChecked = approvedCount === totalFields;
 
   const gridCols = showApprovalCheckboxes
-    ? "grid-cols-[28px_100px_1fr_150px]"
-    : "grid-cols-[100px_1fr_150px]";
+    ? "grid-cols-[28px_minmax(80px,1fr)_minmax(100px,2fr)_minmax(80px,1.2fr)_minmax(80px,1.2fr)]"
+    : "grid-cols-[minmax(80px,1fr)_minmax(100px,2fr)_minmax(80px,1.2fr)_minmax(80px,1.2fr)]";
 
   return (
     <div className="space-y-3 bg-white rounded-lg border p-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">{deal.name}</h2>
-        <Badge
-          className={`${statusColors[deal.status]} text-[11px] font-medium border px-1.5 py-0`}
-          variant="secondary"
-        >
-          {statusLabels[deal.status]}
-        </Badge>
-      </div>
+      <h2 className="text-sm font-semibold">{deal.name}</h2>
 
       {/* Status banner — role-aware messaging */}
       {deal.status === "entry" && (
@@ -320,6 +341,9 @@ export function DealForm({ dealId }: Props) {
           Value
         </span>
         <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+          Source
+        </span>
+        <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
           Last Edit
         </span>
       </div>
@@ -362,7 +386,7 @@ export function DealForm({ dealId }: Props) {
               </Label>
 
               {/* Value input + inline AI suggestion */}
-              <div>
+              <div className="min-w-0">
                 {field.type === "textarea" ? (
                   <Textarea
                     key={`${field.key}-${deal.updatedAt}`}
@@ -431,8 +455,37 @@ export function DealForm({ dealId }: Props) {
                 )}
               </div>
 
+              {/* Source document */}
+              <div className="pt-1.5 min-w-0">
+                {(() => {
+                  const sourceDoc = getSourceDoc(field.key);
+                  if (!sourceDoc) return <span className="text-[10px] text-muted-foreground">—</span>;
+                  return (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setViewerDoc(sourceDoc)}
+                        className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 hover:underline truncate"
+                        title={sourceDoc.filename}
+                      >
+                        <FileText className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{sourceDoc.filename}</span>
+                      </button>
+                      <button
+                        onClick={() => handleClearSource(field.key)}
+                        className="shrink-0 rounded p-0.5 hover:bg-red-100 text-muted-foreground hover:text-red-500"
+                        title="Remove source link"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* Audit chip */}
-              <FieldAuditChip fieldName={field.key} auditLogs={auditLogs} />
+              <div className="pt-1.5 min-w-0">
+                <FieldAuditChip fieldName={field.key} auditLogs={auditLogs} />
+              </div>
             </div>
           );
         })}
@@ -546,21 +599,40 @@ export function DealForm({ dealId }: Props) {
               return (
                 <div
                   key={doc.id}
-                  className="flex items-center gap-2 rounded border px-2.5 py-1.5 bg-muted/30"
+                  className="flex items-center gap-2 rounded border px-2.5 py-1.5 bg-muted/30 hover:bg-muted/60 transition-colors"
                 >
-                  <IconComponent className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="text-[11px] font-medium truncate flex-1">
-                    {doc.filename}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground shrink-0">
-                    {new Date(doc.uploadedAt).toLocaleDateString()}
-                  </span>
+                  <button
+                    onClick={() => setViewerDoc(doc)}
+                    className="flex items-center gap-2 flex-1 min-w-0 text-left"
+                  >
+                    <IconComponent className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-[11px] font-medium truncate flex-1">
+                      {doc.filename}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">
+                      {new Date(doc.uploadedAt).toLocaleDateString()}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleDeleteDocument(doc)}
+                    className="shrink-0 rounded p-0.5 hover:bg-red-100 text-muted-foreground hover:text-red-500"
+                    title="Delete document"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
                 </div>
               );
             })}
           </div>
         </div>
       )}
+
+      <DocumentViewer
+        document={viewerDoc}
+        dealId={dealId}
+        open={viewerDoc !== null}
+        onOpenChange={(open) => { if (!open) setViewerDoc(null); }}
+      />
     </div>
   );
 }

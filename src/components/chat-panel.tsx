@@ -218,12 +218,7 @@ export function ChatPanel({ dealId }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg border">
-      <div className="p-2 border-b bg-muted/30 flex items-center gap-2">
-        <Bot className="h-3.5 w-3.5" />
-        <span className="text-xs font-medium">Deal Assistant</span>
-      </div>
-
+    <div className="flex flex-col h-full bg-white">
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div ref={scrollRef} className="p-3 space-y-3">

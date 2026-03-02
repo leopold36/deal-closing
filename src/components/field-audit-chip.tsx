@@ -44,7 +44,7 @@ export function FieldAuditChip({ fieldName, auditLogs }: Props) {
       <PopoverTrigger asChild>
         <Badge
           variant="outline"
-          className="cursor-pointer text-[10px] gap-0.5 font-normal max-w-[180px] truncate h-5 px-1.5"
+          className="cursor-pointer text-[10px] gap-0.5 font-normal max-w-full truncate h-5 px-1.5"
         >
           {icon}
           {label}

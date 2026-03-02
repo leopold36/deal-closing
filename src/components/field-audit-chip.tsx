@@ -7,7 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Pencil, Bot, Check, Lightbulb } from "lucide-react";
+import { Pencil, Bot, Check, Sparkles } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Props = {
@@ -21,23 +21,16 @@ export function FieldAuditChip({ fieldName, auditLogs }: Props) {
 
   if (!lastLog) return <span className="text-xs text-muted-foreground">—</span>;
 
+  const isAiAssisted = lastLog.source === "agent";
+
   const icon =
-    lastLog.action === "AGENT_SUGGESTED" ? (
-      <Lightbulb className="h-2.5 w-2.5" />
-    ) : lastLog.source === "agent" ? (
-      <Bot className="h-2.5 w-2.5" />
-    ) : lastLog.action === "APPROVED" ? (
+    lastLog.action === "APPROVED" ? (
       <Check className="h-2.5 w-2.5" />
     ) : (
       <Pencil className="h-2.5 w-2.5" />
     );
 
-  const label =
-    lastLog.action === "AGENT_SUGGESTED"
-      ? "AI suggested"
-      : lastLog.source === "agent"
-        ? `Agent, confirmed by ${lastLog.userEmail}`
-        : `${lastLog.userEmail}`;
+  const label = lastLog.userEmail ?? "Unknown";
 
   return (
     <Popover>
@@ -46,7 +39,7 @@ export function FieldAuditChip({ fieldName, auditLogs }: Props) {
           variant="outline"
           className="cursor-pointer text-[10px] gap-0.5 font-normal max-w-full truncate h-5 px-1.5"
         >
-          {icon}
+          {isAiAssisted ? <Sparkles className="h-2.5 w-2.5 shrink-0" /> : icon}
           {label}
         </Badge>
       </PopoverTrigger>
@@ -58,14 +51,9 @@ export function FieldAuditChip({ fieldName, auditLogs }: Props) {
           <div className="space-y-2">
             {fieldLogs.map((log) => (
               <div key={log.id} className="text-xs border-l-2 pl-2 py-1">
-                <div className="font-medium">
-                  {log.action === "AGENT_SUGGESTED"
-                    ? "AI suggested"
-                    : log.source === "agent"
-                      ? "Agent extracted"
-                      : "Manual update"}{" "}
-                  by{" "}
-                  {log.userEmail}
+                <div className="font-medium flex items-center gap-1">
+                  {log.source === "agent" && <Sparkles className="h-2.5 w-2.5 shrink-0" />}
+                  <span>{log.userEmail}</span>
                 </div>
                 {log.oldValue && (
                   <div className="text-muted-foreground">

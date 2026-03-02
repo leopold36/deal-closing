@@ -13,7 +13,7 @@ export default function DealsPage() {
         </div>
         <CreateDealDialog />
       </div>
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden bg-white">
         <DealsList />
       </div>
     </div>

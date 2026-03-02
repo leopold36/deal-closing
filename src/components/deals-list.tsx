@@ -2,9 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import { Deal } from "@/lib/types";
+import { Deal, DEAL_FIELDS } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, ChevronRight } from "lucide-react";
+
+const TOTAL_FIELDS = DEAL_FIELDS.length;
+const FIELD_KEYS = DEAL_FIELDS.map((f) => f.key);
+
+function getFilledCount(deal: Deal): number {
+  return FIELD_KEYS.filter((key) => {
+    const val = (deal as Record<string, unknown>)[key];
+    return val !== null && val !== undefined && val !== "";
+  }).length;
+}
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -27,6 +37,10 @@ const statusLabels: Record<string, string> = {
 export function DealsList() {
   const router = useRouter();
   const { data: deals = [], isLoading, mutate: mutateDeals } = useSWR<Deal[]>("/api/deals", fetcher);
+  const { data: approvalCounts = {} } = useSWR<Record<string, number>>(
+    "/api/deals/field-approval-counts",
+    fetcher
+  );
 
   const handleDelete = async (e: React.MouseEvent, dealId: string) => {
     e.stopPropagation();
@@ -54,6 +68,8 @@ export function DealsList() {
         <tr className="border-b bg-muted/30">
           <th className="text-left px-3 py-1.5">Deal Name</th>
           <th className="text-left px-3 py-1.5">Status</th>
+          <th className="text-left px-3 py-1.5">Filled</th>
+          <th className="text-left px-3 py-1.5">Validated</th>
           <th className="text-right px-3 py-1.5">Updated</th>
           <th className="px-3 py-1.5 w-10"></th>
           <th className="px-3 py-1.5 w-8"></th>
@@ -73,6 +89,40 @@ export function DealsList() {
               <Badge className={`${statusColors[deal.status]} text-[11px] font-medium border px-1.5 py-0`} variant="secondary">
                 {statusLabels[deal.status]}
               </Badge>
+            </td>
+            <td className="px-3">
+              {(() => {
+                const filled = getFilledCount(deal);
+                const pct = Math.round((filled / TOTAL_FIELDS) * 100);
+                return (
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-blue-500 transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">{filled}/{TOTAL_FIELDS}</span>
+                  </div>
+                );
+              })()}
+            </td>
+            <td className="px-3">
+              {(() => {
+                const validated = approvalCounts[deal.id] ?? 0;
+                const pct = Math.round((validated / TOTAL_FIELDS) * 100);
+                return (
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-emerald-500 transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">{validated}/{TOTAL_FIELDS}</span>
+                  </div>
+                );
+              })()}
             </td>
             <td className="px-3 text-right text-muted-foreground font-mono tabular-nums">
               {new Date(deal.updatedAt).toLocaleDateString()}

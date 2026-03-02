@@ -276,11 +276,25 @@ export function DealForm({ dealId }: Props) {
       )}
       {deal.status === "pending_approval" && (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] text-amber-800">
-          {currentUser?.role === "approver" ? (
-            <><span className="font-semibold">Your Review Required</span> — Please verify all deal values and approve or reject this submission.</>
-          ) : (
-            <><span className="font-semibold">Pending Approval</span> — This deal has been submitted and is awaiting review by the Portfolio Manager.</>
-          )}
+          {(() => {
+            const wasRevoked = auditLogs.some(
+              (l) => l.action === "APPROVED"
+            ) && auditLogs.some(
+              (l) => l.action === "RECALLED" && auditLogs.indexOf(l) < auditLogs.findIndex((a) => a.action === "APPROVED")
+            );
+            if (wasRevoked) {
+              return currentUser?.role === "approver" ? (
+                <><span className="font-semibold">Back Under Review</span> — You revoked the previous approval. Please re-verify all deal values and approve or reject.</>
+              ) : (
+                <><span className="font-semibold">Back Under Review</span> — The Portfolio Manager revoked the previous approval. This deal is being re-reviewed.</>
+              );
+            }
+            return currentUser?.role === "approver" ? (
+              <><span className="font-semibold">Your Review Required</span> — Please verify all deal values and approve or reject this submission.</>
+            ) : (
+              <><span className="font-semibold">Pending Approval</span> — This deal has been submitted and is awaiting review by the Portfolio Manager.</>
+            );
+          })()}
         </div>
       )}
       {deal.status === "approved" && (
@@ -541,7 +555,35 @@ export function DealForm({ dealId }: Props) {
             Recall Submission
           </Button>
         )}
-        {deal.status === "approved" && (
+        {deal.status === "approved" && currentUser?.role === "approver" && (
+          <Button
+            onClick={async () => {
+              if (!confirm("Revoke approval? The deal will return to pending review.")) return;
+              setActionLoading("revoke");
+              await fetch(`/api/deals/${dealId}/revoke`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: currentUser.id }),
+              });
+              mutateDeal();
+              mutate(`/api/deals/${dealId}/audit`);
+              mutateFieldApprovals();
+              setActionLoading(null);
+            }}
+            disabled={actionLoading === "revoke"}
+            variant="outline"
+            size="sm"
+            className="h-7 text-[11px]"
+          >
+            {actionLoading === "revoke" ? (
+              <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+            ) : (
+              <Undo2 className="h-3 w-3 mr-1.5" />
+            )}
+            Revoke Approval
+          </Button>
+        )}
+        {deal.status === "approved" && currentUser?.role !== "approver" && (
           <p className="text-[11px] text-emerald-600 font-medium">
             This deal has been approved.
           </p>

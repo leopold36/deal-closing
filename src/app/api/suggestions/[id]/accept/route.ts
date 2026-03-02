@@ -56,12 +56,14 @@ export async function POST(
     .set({ status: "accepted" })
     .where(eq(suggestions.id, id));
 
-  // Create audit log
+  // Create audit log — the human accepted, so they are the actor.
+  // source stays "agent" to indicate AI origin (for the sparkle icon),
+  // but action is FIELD_UPDATED since the human made the edit.
   await db.insert(auditLogs).values({
     id: uuid(),
     dealId: suggestion.dealId,
     userId,
-    action: "AGENT_EXTRACTED",
+    action: "FIELD_UPDATED",
     fieldName: suggestion.fieldName,
     oldValue: oldValue != null ? String(oldValue) : null,
     newValue: suggestion.suggestedValue,

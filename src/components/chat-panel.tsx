@@ -261,7 +261,7 @@ export function ChatPanel({ dealId }: Props) {
                     className={`rounded-md px-2.5 py-1.5 max-w-[85%] ${
                       msg.role === "user"
                         ? "bg-slate-700 text-white whitespace-pre-wrap text-xs"
-                        : "bg-muted chat-markdown"
+                        : "bg-white border chat-markdown"
                     }`}
                   >
                     {msg.role === "assistant" ? (
@@ -311,7 +311,7 @@ export function ChatPanel({ dealId }: Props) {
                 <div className="mt-0.5 p-1 rounded bg-muted shrink-0">
                   <Bot className="h-3 w-3" />
                 </div>
-                <div className="rounded-md px-2.5 py-1.5 max-w-[85%] bg-muted chat-markdown">
+                <div className="rounded-md px-2.5 py-1.5 max-w-[85%] bg-white border chat-markdown">
                   <ReactMarkdown>{streamingText}</ReactMarkdown>
                 </div>
               </div>
@@ -321,7 +321,7 @@ export function ChatPanel({ dealId }: Props) {
                 <div className="mt-0.5 p-1 rounded bg-muted shrink-0">
                   <Bot className="h-3 w-3" />
                 </div>
-                <div className="rounded-md px-2.5 py-1.5 text-xs bg-muted text-muted-foreground">
+                <div className="rounded-md px-2.5 py-1.5 text-xs bg-white border text-muted-foreground">
                   Thinking...
                 </div>
               </div>

@@ -35,6 +35,16 @@ import { cn } from "@/lib/utils";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+function formatCurrency(val: string): string {
+  const num = parseFloat(val.replace(/,/g, ""));
+  if (isNaN(num)) return val;
+  return num.toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
+function parseCurrency(val: string): string {
+  return val.replace(/,/g, "");
+}
+
 const statusLabels: Record<string, string> = {
   entry: "Data Entry",
   pending_approval: "Pending Approval",
@@ -367,10 +377,18 @@ export function DealForm({ dealId }: Props) {
                 ) : (
                   <Input
                     key={`${field.key}-${deal.updatedAt}`}
-                    type={field.type === "currency" ? "number" : field.type}
-                    defaultValue={value}
+                    type={isCurrency ? "text" : field.type}
+                    defaultValue={isCurrency ? formatCurrency(value) : value}
                     disabled={!isEditable}
-                    onBlur={(e) => handleFieldBlur(field.key, e.target.value)}
+                    onBlur={(e) => {
+                      if (isCurrency) {
+                        const raw = parseCurrency(e.target.value);
+                        e.target.value = formatCurrency(raw);
+                        handleFieldBlur(field.key, raw);
+                      } else {
+                        handleFieldBlur(field.key, e.target.value);
+                      }
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         (e.target as HTMLInputElement).blur();
@@ -393,7 +411,7 @@ export function DealForm({ dealId }: Props) {
                   <div className="mt-1 flex items-center gap-1 rounded border border-amber-200 bg-amber-50 px-2 py-0.5">
                     <Lightbulb className="h-3 w-3 text-amber-500 shrink-0" />
                     <span className="text-[11px] truncate flex-1 text-amber-800 tabular-nums">
-                      {suggestion.suggestedValue}
+                      {isCurrency ? formatCurrency(suggestion.suggestedValue) : suggestion.suggestedValue}
                     </span>
                     <button
                       onClick={() => handleAcceptSuggestion(suggestion)}

@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1772452570601,
+      "tag": "0000_dizzy_leper_queen",
+      "breakpoints": true
+    }
+  ]
+}

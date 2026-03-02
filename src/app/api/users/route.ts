@@ -5,8 +5,13 @@ import { v4 as uuid } from "uuid";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
-  const allUsers = await db.select().from(users);
-  return NextResponse.json(allUsers);
+  try {
+    const allUsers = await db.select().from(users);
+    return NextResponse.json(allUsers);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message, DATABASE_URL_SET: !!process.env.DATABASE_URL }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {

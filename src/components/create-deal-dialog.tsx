@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useUser } from "@/lib/user-context";
+import { DEMO_DEALS } from "@/lib/demo-deals";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,26 +14,47 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, FlaskConical } from "lucide-react";
 import { mutate } from "swr";
 
 export function CreateDealDialog() {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
+  const [customName, setCustomName] = useState("");
+  const [creating, setCreating] = useState(false);
   const { currentUser } = useUser();
+  const router = useRouter();
 
-  const handleCreate = async () => {
-    if (!name.trim() || !currentUser) return;
+  const createDeal = async (name: string, demoData?: Record<string, string>) => {
+    if (!name.trim() || !currentUser || creating) return;
+    setCreating(true);
 
-    await fetch("/api/deals", {
+    const res = await fetch("/api/deals", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: name.trim(), userId: currentUser.id }),
     });
+    const deal = await res.json();
 
-    setName("");
+    if (demoData) {
+      for (const [field, value] of Object.entries(demoData)) {
+        await fetch(`/api/deals/${deal.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            field,
+            value: value || null,
+            userId: currentUser.id,
+            source: "manual",
+          }),
+        });
+      }
+    }
+
+    setCustomName("");
+    setCreating(false);
     setOpen(false);
     mutate("/api/deals");
+    router.push(`/deals/${deal.id}`);
   };
 
   return (
@@ -46,20 +69,50 @@ export function CreateDealDialog() {
         <DialogHeader>
           <DialogTitle>Create New Deal</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 pt-4">
-          <div>
-            <Label htmlFor="dealName">Deal Name</Label>
-            <Input
-              id="dealName"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Acme Corp Acquisition"
-              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-            />
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <FlaskConical className="h-3 w-3" />
+              Demo deals (pre-filled with sample data)
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              {DEMO_DEALS.map((demo) => (
+                <button
+                  key={demo.name}
+                  onClick={() => createDeal(demo.name, demo.data)}
+                  disabled={creating}
+                  className="text-left rounded-md border px-3 py-2 text-xs hover:bg-muted/50 hover:border-primary/30 transition-colors disabled:opacity-50"
+                >
+                  <span className="font-medium">{demo.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-          <Button onClick={handleCreate} className="w-full">
-            Create Deal
-          </Button>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-background px-2 text-muted-foreground">or enter your own</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Input
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder="e.g., Acme Corp Acquisition"
+              onKeyDown={(e) => e.key === "Enter" && createDeal(customName)}
+              disabled={creating}
+              className="text-xs"
+            />
+            <Button
+              onClick={() => createDeal(customName)}
+              className="w-full"
+              disabled={!customName.trim() || creating}
+            >
+              Create Deal
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

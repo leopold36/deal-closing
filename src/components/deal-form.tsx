@@ -12,13 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FieldAuditChip } from "./field-audit-chip";
 import { AuditTimeline } from "./audit-timeline";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Check, X, CheckCircle2, Trash2, FlaskConical, Undo2 } from "lucide-react";
+import { Check, X, CheckCircle2, Trash2, Undo2 } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -44,7 +38,7 @@ type Props = {
 
 export function DealForm({ dealId }: Props) {
   const router = useRouter();
-  const { currentUser, users, setCurrentUser } = useUser();
+  const { currentUser } = useUser();
   const { data: deal, mutate: mutateDeal } = useSWR<Deal>(
     `/api/deals/${dealId}`,
     fetcher
@@ -153,71 +147,6 @@ export function DealForm({ dealId }: Props) {
     router.push("/deals");
   };
 
-  const dummyDataSets = [
-    {
-      label: "Acme Corp — Series B",
-      data: {
-        name: "Acme Corp Series B",
-        counterparty: "Acme Corporation",
-        equityTicker: "ACME",
-        investmentAmount: "25000000",
-        dealDate: "2026-03-15",
-        settlementDate: "2026-03-22",
-        notes: "Series B equity investment. Lead investor position with board seat. Strong revenue growth at 140% YoY.",
-      },
-    },
-    {
-      label: "Nova Energy — Convertible Note",
-      data: {
-        name: "Nova Energy Convertible Note",
-        counterparty: "Nova Energy Inc.",
-        equityTicker: "NOVA",
-        investmentAmount: "10000000",
-        dealDate: "2026-04-01",
-        settlementDate: "2026-04-08",
-        notes: "Convertible note with 20% discount and $500M cap. Co-investing alongside Greenfield Partners.",
-      },
-    },
-  ];
-
-  const handleLoadDummy = async (data: Record<string, string>) => {
-    // Always use the entry user for data entry
-    const entryUser = users.find((u) => u.role === "entry");
-    if (!entryUser) return;
-
-    // Switch to entry user
-    setCurrentUser(entryUser);
-
-    for (const [field, value] of Object.entries(data)) {
-      await fetch(`/api/deals/${dealId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          field,
-          value: value || null,
-          userId: entryUser.id,
-          source: "manual",
-        }),
-      });
-    }
-
-    // Submit for approval as entry user
-    await fetch(`/api/deals/${dealId}/submit`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: entryUser.id }),
-    });
-
-    // Switch to approver user
-    const approverUser = users.find((u) => u.role === "approver");
-    if (approverUser) {
-      setCurrentUser(approverUser);
-    }
-
-    mutateDeal();
-    mutate(`/api/deals/${dealId}/audit`);
-  };
-
   if (!deal) return <p className="text-muted-foreground">Loading...</p>;
 
   const isEditable = deal.status === "entry" || deal.status === "rejected" || deal.status === "pending_approval" || deal.status === "recalled";
@@ -228,30 +157,7 @@ export function DealForm({ dealId }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h2 className="text-base font-semibold">{deal.name}</h2>
-          {isEditable && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-6 text-[11px] gap-1 px-2">
-                  <FlaskConical className="h-3 w-3" />
-                  Load Demo Data
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {dummyDataSets.map((set) => (
-                  <DropdownMenuItem
-                    key={set.label}
-                    onClick={() => handleLoadDummy(set.data)}
-                    className="text-xs"
-                  >
-                    {set.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
+        <h2 className="text-base font-semibold">{deal.name}</h2>
         <Badge
           className={`${statusColors[deal.status]} text-[11px] font-medium border px-1.5 py-0`}
           variant="secondary"

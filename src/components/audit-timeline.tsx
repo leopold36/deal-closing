@@ -31,22 +31,23 @@ export function AuditTimeline({ logs }: { logs: AuditLog[] }) {
   const displayed = expanded ? logs : logs.slice(0, 3);
 
   return (
-    <div className="border-t pt-4">
+    <div className="border-t pt-2">
       <Button
         variant="ghost"
-        className="flex items-center gap-2 mb-3"
+        size="sm"
+        className="h-6 text-xs flex items-center gap-1.5 mb-2"
         onClick={() => setExpanded(!expanded)}
       >
         {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         Audit Trail ({logs.length} entries)
       </Button>
-      <div className="space-y-2">
+      <div className="space-y-1">
         {displayed.map((log) => {
           const Icon = actionIcons[log.action] || Pencil;
           return (
-            <div key={log.id} className="flex items-start gap-3 text-sm">
-              <div className="mt-0.5 p-1 rounded bg-muted">
-                <Icon className="h-3 w-3" />
+            <div key={log.id} className="flex items-start gap-2 text-xs">
+              <div className="mt-0.5 p-0.5 rounded bg-muted/70">
+                <Icon className="h-2.5 w-2.5" />
               </div>
               <div className="flex-1">
                 <span className="font-medium">{actionLabels[log.action]}</span>
@@ -70,7 +71,7 @@ export function AuditTimeline({ logs }: { logs: AuditLog[] }) {
       {logs.length > 3 && !expanded && (
         <Button
           variant="link"
-          className="text-xs mt-1"
+          className="text-[11px] mt-0.5"
           onClick={() => setExpanded(true)}
         >
           Show {logs.length - 3} more entries

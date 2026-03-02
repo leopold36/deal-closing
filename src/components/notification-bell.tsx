@@ -26,10 +26,10 @@ export function NotificationBell() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-4 w-4" />
+        <Button variant="ghost" size="icon" className="relative h-7 w-7 text-slate-400 hover:text-white hover:bg-white/10">
+          <Bell className="h-3.5 w-3.5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] text-white flex items-center justify-center">
+            <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-red-500 text-[9px] text-white flex items-center justify-center font-medium">
               {unreadCount}
             </span>
           )}

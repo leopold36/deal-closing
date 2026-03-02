@@ -23,11 +23,11 @@ export function FieldAuditChip({ fieldName, auditLogs }: Props) {
 
   const icon =
     lastLog.source === "agent" ? (
-      <Bot className="h-3 w-3" />
+      <Bot className="h-2.5 w-2.5" />
     ) : lastLog.action === "APPROVED" ? (
-      <Check className="h-3 w-3" />
+      <Check className="h-2.5 w-2.5" />
     ) : (
-      <Pencil className="h-3 w-3" />
+      <Pencil className="h-2.5 w-2.5" />
     );
 
   const label =
@@ -40,7 +40,7 @@ export function FieldAuditChip({ fieldName, auditLogs }: Props) {
       <PopoverTrigger asChild>
         <Badge
           variant="outline"
-          className="cursor-pointer text-xs gap-1 font-normal max-w-[200px] truncate"
+          className="cursor-pointer text-[10px] gap-0.5 font-normal max-w-[180px] truncate h-5 px-1.5"
         >
           {icon}
           {label}

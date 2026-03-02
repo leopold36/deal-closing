@@ -17,28 +17,31 @@ export function NavBar() {
   const pathname = usePathname();
 
   return (
-    <header className="border-b bg-background">
-      <div className="flex h-14 items-center px-6">
-        <div className="flex items-center gap-1 mr-8">
-          <span className="font-semibold text-lg">Deal Closing</span>
+    <header className="bg-slate-900 text-white border-b border-slate-800">
+      <div className="flex h-10 items-center px-4">
+        <div className="flex items-center gap-2 mr-6">
+          <div className="h-5 w-5 rounded bg-blue-500 flex items-center justify-center">
+            <span className="text-[10px] font-bold text-white">DC</span>
+          </div>
+          <span className="font-semibold text-sm tracking-tight">Deal Closing</span>
         </div>
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-0.5">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "px-3 py-1.5 text-sm rounded-md transition-colors",
+                "px-2.5 py-1 text-xs rounded transition-colors",
                 pathname.startsWith(item.href)
-                  ? "bg-accent text-accent-foreground font-medium"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  ? "bg-white/15 text-white font-medium"
+                  : "text-slate-400 hover:text-white hover:bg-white/10"
               )}
             >
               {item.label}
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2">
           <NotificationBell />
           <UserSwitcher />
         </div>

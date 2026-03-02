@@ -22,10 +22,10 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  entry: "bg-blue-100 text-blue-800",
-  pending_approval: "bg-yellow-100 text-yellow-800",
-  approved: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800",
+  entry: "bg-blue-500/10 text-blue-700 border-blue-200",
+  pending_approval: "bg-amber-500/10 text-amber-700 border-amber-200",
+  approved: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
+  rejected: "bg-red-500/10 text-red-700 border-red-200",
 };
 
 type Props = {
@@ -108,29 +108,29 @@ export function DealForm({ dealId }: Props) {
   const isEditable = deal.status === "entry" || deal.status === "rejected";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">{deal.name}</h2>
+          <h2 className="text-base font-semibold">{deal.name}</h2>
         </div>
-        <Badge className={statusColors[deal.status]} variant="secondary">
+        <Badge className={`${statusColors[deal.status]} text-[11px] font-medium border px-1.5 py-0`} variant="secondary">
           {statusLabels[deal.status]}
         </Badge>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {DEAL_FIELDS.map((field) => {
           const value = String((deal as Record<string, unknown>)[field.key] ?? "");
           return (
-            <div key={field.key} className="grid grid-cols-[180px_1fr_200px] gap-3 items-start">
-              <Label className="pt-2 text-sm font-medium">{field.label}</Label>
+            <div key={field.key} className="grid grid-cols-[140px_1fr_180px] gap-2 items-start">
+              <Label className="pt-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">{field.label}</Label>
               <div>
                 {field.type === "textarea" ? (
                   <Textarea
                     defaultValue={value}
                     disabled={!isEditable}
                     onBlur={(e) => handleFieldBlur(field.key, e.target.value)}
-                    className="min-h-[80px]"
+                    className="min-h-[60px]"
                   />
                 ) : (
                   <Input
@@ -150,22 +150,22 @@ export function DealForm({ dealId }: Props) {
         })}
       </div>
 
-      <div className="flex gap-3 pt-4 border-t">
+      <div className="flex gap-2 pt-3 border-t">
         {deal.status === "entry" && (
-          <Button onClick={handleSubmitForApproval}>Submit for Approval</Button>
+          <Button onClick={handleSubmitForApproval} size="sm" className="h-7 text-xs">Submit for Approval</Button>
         )}
         {deal.status === "pending_approval" && (
           <>
-            <Button onClick={handleApprove} variant="default">
+            <Button onClick={handleApprove} variant="default" size="sm" className="h-7 text-xs">
               Approve
             </Button>
-            <Button onClick={handleReject} variant="destructive">
+            <Button onClick={handleReject} variant="destructive" size="sm" className="h-7 text-xs">
               Reject
             </Button>
           </>
         )}
         {deal.status === "approved" && (
-          <p className="text-sm text-green-600 font-medium">
+          <p className="text-xs text-emerald-600 font-medium">
             This deal has been approved.
           </p>
         )}

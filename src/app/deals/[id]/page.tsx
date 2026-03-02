@@ -12,11 +12,11 @@ export default function DealDetailPage({
   const { id } = use(params);
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)]">
-      <div className="flex-[2] overflow-y-auto p-6 border-r">
+    <div className="flex h-[calc(100vh-2.5rem)]">
+      <div className="flex-[2] overflow-y-auto p-4 border-r">
         <DealForm dealId={id} />
       </div>
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-muted/20">
         <ChatPanel dealId={id} />
       </div>
     </div>

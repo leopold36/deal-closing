@@ -26,12 +26,12 @@ export function UserSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-2">
-          <Avatar className="h-7 w-7">
-            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+        <Button variant="ghost" className="flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/10 h-7 px-2">
+          <Avatar className="h-5 w-5">
+            <AvatarFallback className="text-[9px] bg-slate-700 text-slate-300">{initials}</AvatarFallback>
           </Avatar>
-          <span className="text-sm">{currentUser.name}</span>
-          <Badge variant="outline" className="text-xs">
+          <span className="text-xs">{currentUser.name}</span>
+          <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400 px-1 py-0">
             {currentUser.role}
           </Badge>
         </Button>

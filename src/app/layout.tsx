@@ -18,11 +18,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} antialiased text-[13px]`}>
         <UserProvider>
           <div className="min-h-screen flex flex-col">
             <NavBar />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 bg-background">{children}</main>
           </div>
         </UserProvider>
       </body>

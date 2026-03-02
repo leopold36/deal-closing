@@ -57,37 +57,39 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Admin</h1>
+    <div className="px-4 py-3 space-y-3">
+      <h1 className="text-base font-semibold">Admin</h1>
 
       <Card>
         <CardHeader>
           <CardTitle>Add User</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-3 items-end">
+          <div className="flex gap-2 items-end">
             <div className="flex-1">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name" className="text-xs">Name</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="John Smith"
+                className="h-8 text-xs"
               />
             </div>
             <div className="flex-1">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-xs">Email</Label>
               <Input
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="john@lgt.com"
+                className="h-8 text-xs"
               />
             </div>
             <div className="w-40">
-              <Label>Role</Label>
+              <Label className="text-xs">Role</Label>
               <Select value={role} onValueChange={setRole}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -97,7 +99,7 @@ export default function AdminPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleAdd}>
+            <Button onClick={handleAdd} size="sm" className="h-7 text-xs">
               <Plus className="h-4 w-4 mr-2" />
               Add
             </Button>
@@ -122,18 +124,18 @@ export default function AdminPage() {
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium text-xs">{user.name}</TableCell>
+                  <TableCell className="text-xs">{user.email}</TableCell>
+                  <TableCell className="text-xs">
                     <Badge variant="outline">{user.role}</Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-xs">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(user.id)}
                     >
-                      <Trash2 className="h-4 w-4 text-muted-foreground" />
+                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                     </Button>
                   </TableCell>
                 </TableRow>

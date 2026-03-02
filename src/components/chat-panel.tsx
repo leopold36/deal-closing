@@ -116,17 +116,17 @@ export function ChatPanel({ dealId }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-3 border-b flex items-center gap-2">
-        <Bot className="h-4 w-4" />
-        <span className="text-sm font-medium">Deal Assistant</span>
+      <div className="p-2 border-b bg-muted/30 flex items-center gap-2">
+        <Bot className="h-3.5 w-3.5" />
+        <span className="text-xs font-medium">Deal Assistant</span>
       </div>
 
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div ref={scrollRef} className="p-4 space-y-4">
+          <div ref={scrollRef} className="p-3 space-y-3">
             {messages.length === 0 && !streaming && (
-              <div className="text-center text-muted-foreground text-sm py-8">
-                <Bot className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <div className="text-center text-muted-foreground text-xs py-6">
+                <Bot className="h-6 w-6 mx-auto mb-2 opacity-50" />
                 <p>
                   Upload a document or ask me to help fill in deal information.
                 </p>
@@ -145,7 +145,7 @@ export function ChatPanel({ dealId }: Props) {
                   </div>
                 )}
                 <div
-                  className={`rounded-lg px-3 py-2 max-w-[80%] text-sm whitespace-pre-wrap ${
+                  className={`rounded-md px-2.5 py-1.5 max-w-[85%] text-xs whitespace-pre-wrap ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted"
@@ -165,7 +165,7 @@ export function ChatPanel({ dealId }: Props) {
                 <div className="mt-0.5 p-1 rounded bg-muted shrink-0">
                   <Bot className="h-3 w-3" />
                 </div>
-                <div className="rounded-lg px-3 py-2 max-w-[80%] text-sm bg-muted whitespace-pre-wrap">
+                <div className="rounded-md px-2.5 py-1.5 max-w-[85%] text-xs bg-muted whitespace-pre-wrap">
                   {streamingText}
                 </div>
               </div>
@@ -175,7 +175,7 @@ export function ChatPanel({ dealId }: Props) {
                 <div className="mt-0.5 p-1 rounded bg-muted shrink-0">
                   <Bot className="h-3 w-3" />
                 </div>
-                <div className="rounded-lg px-3 py-2 text-sm bg-muted text-muted-foreground">
+                <div className="rounded-md px-2.5 py-1.5 text-xs bg-muted text-muted-foreground">
                   Thinking...
                 </div>
               </div>
@@ -184,8 +184,8 @@ export function ChatPanel({ dealId }: Props) {
         </ScrollArea>
       </div>
 
-      <div className="p-3 border-t">
-        <div className="flex gap-2">
+      <div className="p-2 border-t bg-muted/30">
+        <div className="flex gap-1.5">
           <input
             type="file"
             ref={fileInputRef}
@@ -196,6 +196,7 @@ export function ChatPanel({ dealId }: Props) {
           <Button
             variant="outline"
             size="icon"
+            className="h-7 w-7"
             onClick={() => fileInputRef.current?.click()}
             disabled={streaming}
           >
@@ -207,9 +208,11 @@ export function ChatPanel({ dealId }: Props) {
             placeholder="Ask about this deal..."
             onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
             disabled={streaming}
+            className="h-7 text-xs"
           />
           <Button
             size="icon"
+            className="h-7 w-7"
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || streaming}
           >

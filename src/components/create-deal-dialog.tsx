@@ -37,8 +37,8 @@ export function CreateDealDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button size="sm" className="h-7 text-xs">
+          <Plus className="h-3 w-3 mr-1.5" />
           New Deal
         </Button>
       </DialogTrigger>

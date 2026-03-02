@@ -4,10 +4,10 @@ import { Separator } from "@/components/ui/separator";
 
 export default function SnowflakePage() {
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8">
+    <div className="px-4 py-3 max-w-5xl mx-auto space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">Snowflake Integration</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-base font-semibold">Snowflake Integration</h1>
+        <p className="text-xs text-muted-foreground">
           How approved deal data flows into the Snowflake data warehouse.
         </p>
       </div>
@@ -20,34 +20,34 @@ export default function SnowflakePage() {
         <CardContent>
           <div className="flex items-center justify-center gap-4 py-6">
             <div className="text-center">
-              <div className="border-2 rounded-lg p-4 bg-blue-50">
-                <p className="font-medium">App Database</p>
+              <div className="border rounded-md p-3 bg-blue-50">
+                <p className="text-sm font-medium">App Database</p>
                 <p className="text-xs text-muted-foreground">SQLite</p>
               </div>
             </div>
-            <div className="text-2xl text-muted-foreground">&rarr;</div>
+            <div className="text-lg text-muted-foreground">&rarr;</div>
             <div className="text-center">
-              <div className="border-2 rounded-lg p-4 bg-yellow-50">
-                <p className="font-medium">ETL / Sync</p>
+              <div className="border rounded-md p-3 bg-yellow-50">
+                <p className="text-sm font-medium">ETL / Sync</p>
                 <p className="text-xs text-muted-foreground">Scheduled or event-driven</p>
               </div>
             </div>
-            <div className="text-2xl text-muted-foreground">&rarr;</div>
+            <div className="text-lg text-muted-foreground">&rarr;</div>
             <div className="text-center">
-              <div className="border-2 rounded-lg p-4 bg-cyan-50">
-                <p className="font-medium">Snowflake</p>
+              <div className="border rounded-md p-3 bg-cyan-50">
+                <p className="text-sm font-medium">Snowflake</p>
                 <p className="text-xs text-muted-foreground">Data Warehouse</p>
               </div>
             </div>
-            <div className="text-2xl text-muted-foreground">&rarr;</div>
+            <div className="text-lg text-muted-foreground">&rarr;</div>
             <div className="text-center">
-              <div className="border-2 rounded-lg p-4 bg-green-50">
-                <p className="font-medium">Analytics</p>
+              <div className="border rounded-md p-3 bg-green-50">
+                <p className="text-sm font-medium">Analytics</p>
                 <p className="text-xs text-muted-foreground">Reporting & Compliance</p>
               </div>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-xs text-muted-foreground text-center">
             Approved deals with full audit trail are synced to Snowflake,
             including who entered and who approved each data point.
           </p>
@@ -59,12 +59,12 @@ export default function SnowflakePage() {
         <CardHeader>
           <CardTitle>Snowflake Target Schema</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           <div>
-            <h3 className="font-medium mb-2 flex items-center gap-2">
+            <h3 className="text-sm font-medium mb-1.5 flex items-center gap-2">
               <Badge>Table</Badge> DEAL_CLOSING.DEALS
             </h3>
-            <div className="bg-muted rounded-lg p-4 font-mono text-sm overflow-x-auto">
+            <div className="bg-muted rounded-md p-3 font-mono text-[11px] leading-relaxed overflow-x-auto">
               <pre>{`CREATE TABLE DEAL_CLOSING.DEALS (
   DEAL_ID        VARCHAR(36)  PRIMARY KEY,
   DEAL_NAME      VARCHAR(255) NOT NULL,
@@ -87,10 +87,10 @@ export default function SnowflakePage() {
           <Separator />
 
           <div>
-            <h3 className="font-medium mb-2 flex items-center gap-2">
+            <h3 className="text-sm font-medium mb-1.5 flex items-center gap-2">
               <Badge>Table</Badge> DEAL_CLOSING.AUDIT_LOG
             </h3>
-            <div className="bg-muted rounded-lg p-4 font-mono text-sm overflow-x-auto">
+            <div className="bg-muted rounded-md p-3 font-mono text-[11px] leading-relaxed overflow-x-auto">
               <pre>{`CREATE TABLE DEAL_CLOSING.AUDIT_LOG (
   LOG_ID         VARCHAR(36)  PRIMARY KEY,
   DEAL_ID        VARCHAR(36)  REFERENCES DEALS(DEAL_ID),
@@ -112,10 +112,10 @@ export default function SnowflakePage() {
           <Separator />
 
           <div>
-            <h3 className="font-medium mb-2 flex items-center gap-2">
+            <h3 className="text-sm font-medium mb-1.5 flex items-center gap-2">
               <Badge>Table</Badge> DEAL_CLOSING.APPROVALS
             </h3>
-            <div className="bg-muted rounded-lg p-4 font-mono text-sm overflow-x-auto">
+            <div className="bg-muted rounded-md p-3 font-mono text-[11px] leading-relaxed overflow-x-auto">
               <pre>{`CREATE TABLE DEAL_CLOSING.APPROVALS (
   APPROVAL_ID    VARCHAR(36)  PRIMARY KEY,
   DEAL_ID        VARCHAR(36)  REFERENCES DEALS(DEAL_ID),
@@ -135,10 +135,10 @@ export default function SnowflakePage() {
         <CardHeader>
           <CardTitle>Sample Queries</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           <div>
-            <h3 className="text-sm font-medium mb-2">All deals approved by a specific user in the last 30 days</h3>
-            <div className="bg-muted rounded-lg p-4 font-mono text-sm overflow-x-auto">
+            <h3 className="text-xs font-medium mb-1.5">All deals approved by a specific user in the last 30 days</h3>
+            <div className="bg-muted rounded-md p-3 font-mono text-[11px] leading-relaxed overflow-x-auto">
               <pre>{`SELECT d.DEAL_ID, d.DEAL_NAME, d.COUNTERPARTY,
        d.INVESTMENT_AMT, a.APPROVED_AT
 FROM DEAL_CLOSING.DEALS d
@@ -153,8 +153,8 @@ ORDER BY a.APPROVED_AT DESC;`}</pre>
           <Separator />
 
           <div>
-            <h3 className="text-sm font-medium mb-2">Full audit trail for a specific deal</h3>
-            <div className="bg-muted rounded-lg p-4 font-mono text-sm overflow-x-auto">
+            <h3 className="text-xs font-medium mb-1.5">Full audit trail for a specific deal</h3>
+            <div className="bg-muted rounded-md p-3 font-mono text-[11px] leading-relaxed overflow-x-auto">
               <pre>{`SELECT al.TIMESTAMP, al.USER_EMAIL, al.ACTION,
        al.FIELD_NAME, al.OLD_VALUE, al.NEW_VALUE,
        al.SOURCE, al.DOCUMENT_REF, al.DOCUMENT_PAGE
@@ -167,8 +167,8 @@ ORDER BY al.TIMESTAMP ASC;`}</pre>
           <Separator />
 
           <div>
-            <h3 className="text-sm font-medium mb-2">Compliance report: all field changes with approver sign-off</h3>
-            <div className="bg-muted rounded-lg p-4 font-mono text-sm overflow-x-auto">
+            <h3 className="text-xs font-medium mb-1.5">Compliance report: all field changes with approver sign-off</h3>
+            <div className="bg-muted rounded-md p-3 font-mono text-[11px] leading-relaxed overflow-x-auto">
               <pre>{`SELECT d.DEAL_NAME,
        al.FIELD_NAME, al.OLD_VALUE, al.NEW_VALUE,
        al.USER_EMAIL AS changed_by, al.SOURCE,
@@ -189,9 +189,9 @@ ORDER BY d.DEAL_NAME, al.TIMESTAMP;`}</pre>
         <CardHeader>
           <CardTitle>Integration Notes</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm">
+        <CardContent className="space-y-3 text-xs">
           <div>
-            <h3 className="font-medium">Sync Strategy</h3>
+            <h3 className="text-sm font-medium">Sync Strategy</h3>
             <p className="text-muted-foreground">Two options depending on volume and latency requirements:</p>
             <ul className="list-disc list-inside text-muted-foreground mt-1 space-y-1">
               <li><strong>Scheduled batch:</strong> A cron job runs every N minutes, queries for newly approved deals, and bulk-loads them into Snowflake via COPY INTO.</li>
@@ -200,12 +200,12 @@ ORDER BY d.DEAL_NAME, al.TIMESTAMP;`}</pre>
           </div>
           <Separator />
           <div>
-            <h3 className="font-medium">Data Format</h3>
+            <h3 className="text-sm font-medium">Data Format</h3>
             <p className="text-muted-foreground">The primary artifact is the <strong>audit log</strong> — every field change paired with the person who made it and the person who approved it. This provides a complete, tamper-evident record of the data lineage from entry to approval.</p>
           </div>
           <Separator />
           <div>
-            <h3 className="font-medium">Schema Mapping</h3>
+            <h3 className="text-sm font-medium">Schema Mapping</h3>
             <p className="text-muted-foreground">The app's SQLite tables map directly to Snowflake tables. Field names are converted from camelCase to UPPER_SNAKE_CASE. User IDs are resolved to email addresses for human readability in the warehouse. Timestamps are stored as TIMESTAMP_NTZ (UTC).</p>
           </div>
         </CardContent>

@@ -6,6 +6,9 @@ import { chatMessages } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 
+// Allow Agent SDK to spawn claude subprocess even inside a Claude Code session
+delete process.env.CLAUDECODE;
+
 export async function POST(req: Request) {
   const { message, dealId, userId } = await req.json();
 
@@ -28,7 +31,7 @@ export async function POST(req: Request) {
     .orderBy(asc(chatMessages.timestamp))
     .all();
 
-  // Build a prompt string that includes conversation history context
+  // Build messages array for conversation context
   const historyLines = history.map(
     (m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`
   );
@@ -39,7 +42,7 @@ export async function POST(req: Request) {
 
   const prompt = `${conversationContext}User: ${message}`;
 
-  const systemPrompt = `You are a deal closing assistant. You help users fill in deal information by extracting data from uploaded documents or through conversation.
+  const systemPrompt = `You are a deal closing assistant at LGT. You help users fill in deal information by extracting data from uploaded documents (SPAs, cap tables, term sheets, side letters, etc.) or through conversation.
 
 Current deal ID: ${dealId}
 Current user ID: ${userId}
@@ -50,7 +53,13 @@ When you extract information from a document or conversation:
 3. Do NOT ask for confirmation before suggesting — just suggest the value
 
 You can use get_deal_status to see the current state of the deal.
-Be concise and professional.`;
+Be concise and professional. When dealing with documents, look for:
+- Deal name / transaction name
+- Counterparty names
+- Equity tickers or company identifiers
+- Investment amounts, purchase prices
+- Signing dates, closing dates, settlement dates
+- Key terms and conditions for the notes field`;
 
   try {
     const q = query({
@@ -58,7 +67,7 @@ Be concise and professional.`;
       options: {
         model: "claude-sonnet-4-6",
         systemPrompt,
-        maxTurns: 3,
+        maxTurns: 5,
         tools: [],
         permissionMode: "bypassPermissions",
         allowDangerouslySkipPermissions: true,
@@ -76,13 +85,12 @@ Be concise and professional.`;
         try {
           for await (const msg of q) {
             if (msg.type === "assistant") {
-              const text = msg.message.content
-                .reduce((acc, block) => {
-                  if (block.type === "text") {
-                    return acc + block.text;
-                  }
-                  return acc;
-                }, "");
+              const text = msg.message.content.reduce((acc, block) => {
+                if (block.type === "text") {
+                  return acc + block.text;
+                }
+                return acc;
+              }, "");
 
               if (text && text !== fullResponse) {
                 const newText = text.slice(fullResponse.length);
@@ -109,7 +117,7 @@ Be concise and professional.`;
           controller.close();
         } catch (error) {
           console.error("Agent stream error:", error);
-          const errMsg = `data: ${JSON.stringify({ error: "Agent processing failed" })}\n\n`;
+          const errMsg = `data: ${JSON.stringify({ error: String(error) })}\n\n`;
           controller.enqueue(encoder.encode(errMsg));
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           controller.close();

@@ -4,6 +4,7 @@ import Link from "next/link";
 import useSWR from "swr";
 import { Deal } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { Trash2 } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -22,7 +23,14 @@ const statusLabels: Record<string, string> = {
 };
 
 export function DealsList() {
-  const { data: deals = [], isLoading } = useSWR<Deal[]>("/api/deals", fetcher);
+  const { data: deals = [], isLoading, mutate: mutateDeals } = useSWR<Deal[]>("/api/deals", fetcher);
+
+  const handleDelete = async (e: React.MouseEvent, dealId: string) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this deal? This cannot be undone.")) return;
+    await fetch(`/api/deals/${dealId}`, { method: "DELETE" });
+    mutateDeals();
+  };
 
   if (isLoading) {
     return <p className="text-muted-foreground">Loading deals...</p>;
@@ -46,6 +54,7 @@ export function DealsList() {
           <th className="text-right px-3 py-2">Amount</th>
           <th className="text-left px-3 py-2">Status</th>
           <th className="text-right px-3 py-2">Updated</th>
+          <th className="px-3 py-2 w-10"></th>
         </tr>
       </thead>
       <tbody>
@@ -73,6 +82,15 @@ export function DealsList() {
             </td>
             <td className="px-3 text-right text-muted-foreground font-mono tabular-nums">
               {new Date(deal.updatedAt).toLocaleDateString()}
+            </td>
+            <td className="px-3 text-center">
+              <button
+                onClick={(e) => handleDelete(e, deal.id)}
+                className="p-1 rounded hover:bg-red-50 text-muted-foreground/40 hover:text-red-600 transition-colors"
+                title="Delete deal"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
             </td>
           </tr>
         ))}

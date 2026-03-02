@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { deals, auditLogs } from "@/db/schema";
+import {
+  deals,
+  auditLogs,
+  suggestions,
+  documents,
+  notifications,
+  chatMessages,
+} from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 
@@ -53,4 +60,25 @@ export async function PATCH(
 
   const updated = db.select().from(deals).where(eq(deals.id, id)).get();
   return NextResponse.json(updated);
+}
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const deal = db.select().from(deals).where(eq(deals.id, id)).get();
+  if (!deal) {
+    return NextResponse.json({ error: "Deal not found" }, { status: 404 });
+  }
+
+  // Delete related rows first (no FK cascade in SQLite by default)
+  db.delete(chatMessages).where(eq(chatMessages.dealId, id)).run();
+  db.delete(notifications).where(eq(notifications.dealId, id)).run();
+  db.delete(suggestions).where(eq(suggestions.dealId, id)).run();
+  db.delete(auditLogs).where(eq(auditLogs.dealId, id)).run();
+  db.delete(documents).where(eq(documents.dealId, id)).run();
+  db.delete(deals).where(eq(deals.id, id)).run();
+
+  return NextResponse.json({ success: true });
 }

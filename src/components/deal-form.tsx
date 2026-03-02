@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import useSWR, { mutate } from "swr";
 import { useUser } from "@/lib/user-context";
 import { Deal, AuditLog, Suggestion, DEAL_FIELDS } from "@/lib/types";
@@ -11,7 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FieldAuditChip } from "./field-audit-chip";
 import { AuditTimeline } from "./audit-timeline";
-import { Check, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Check, X, CheckCircle2, Trash2, FlaskConical } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -34,6 +41,7 @@ type Props = {
 };
 
 export function DealForm({ dealId }: Props) {
+  const router = useRouter();
   const { currentUser } = useUser();
   const { data: deal, mutate: mutateDeal } = useSWR<Deal>(
     `/api/deals/${dealId}`,
@@ -126,9 +134,60 @@ export function DealForm({ dealId }: Props) {
     mutate(`/api/deals/${dealId}/audit`);
   };
 
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this deal? This cannot be undone.")) return;
+    await fetch(`/api/deals/${dealId}`, { method: "DELETE" });
+    router.push("/deals");
+  };
+
+  const dummyDataSets = [
+    {
+      label: "Acme Corp — Series B",
+      data: {
+        name: "Acme Corp Series B",
+        counterparty: "Acme Corporation",
+        equityTicker: "ACME",
+        investmentAmount: "25000000",
+        dealDate: "2026-03-15",
+        settlementDate: "2026-03-22",
+        notes: "Series B equity investment. Lead investor position with board seat. Strong revenue growth at 140% YoY.",
+      },
+    },
+    {
+      label: "Nova Energy — Convertible Note",
+      data: {
+        name: "Nova Energy Convertible Note",
+        counterparty: "Nova Energy Inc.",
+        equityTicker: "NOVA",
+        investmentAmount: "10000000",
+        dealDate: "2026-04-01",
+        settlementDate: "2026-04-08",
+        notes: "Convertible note with 20% discount and $500M cap. Co-investing alongside Greenfield Partners.",
+      },
+    },
+  ];
+
+  const handleLoadDummy = async (data: Record<string, string>) => {
+    if (!currentUser) return;
+    for (const [field, value] of Object.entries(data)) {
+      await fetch(`/api/deals/${dealId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          field,
+          value: value || null,
+          userId: currentUser.id,
+          source: "manual",
+        }),
+      });
+    }
+    mutateDeal();
+    mutate(`/api/deals/${dealId}/audit`);
+  };
+
   if (!deal) return <p className="text-muted-foreground">Loading...</p>;
 
-  const isEditable = deal.status === "entry" || deal.status === "rejected";
+  const isEditable = deal.status === "entry" || deal.status === "rejected" || deal.status === "pending_approval";
 
   const getSuggestionForField = (fieldName: string) =>
     pendingSuggestions.find((s) => s.fieldName === fieldName);
@@ -136,8 +195,29 @@ export function DealForm({ dealId }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-2">
           <h2 className="text-base font-semibold">{deal.name}</h2>
+          {isEditable && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-6 text-[11px] gap-1 px-2">
+                  <FlaskConical className="h-3 w-3" />
+                  Load Demo Data
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {dummyDataSets.map((set) => (
+                  <DropdownMenuItem
+                    key={set.label}
+                    onClick={() => handleLoadDummy(set.data)}
+                    className="text-xs"
+                  >
+                    {set.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
         <Badge
           className={`${statusColors[deal.status]} text-[11px] font-medium border px-1.5 py-0`}
@@ -148,7 +228,7 @@ export function DealForm({ dealId }: Props) {
       </div>
 
       {/* Column headers */}
-      <div className="grid grid-cols-[140px_160px_1fr_180px] gap-2 items-center">
+      <div className="grid grid-cols-[140px_160px_1fr_28px_180px] gap-2 items-center">
         <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
           Field
         </span>
@@ -157,6 +237,9 @@ export function DealForm({ dealId }: Props) {
         </span>
         <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
           Value
+        </span>
+        <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground text-center" title="Stored in database">
+          DB
         </span>
         <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
           Audit
@@ -169,10 +252,11 @@ export function DealForm({ dealId }: Props) {
             (deal as Record<string, unknown>)[field.key] ?? ""
           );
           const suggestion = getSuggestionForField(field.key);
+          const hasStoredValue = value !== "";
           return (
             <div
               key={field.key}
-              className="grid grid-cols-[140px_160px_1fr_180px] gap-2 items-start"
+              className="grid grid-cols-[140px_160px_1fr_28px_180px] gap-2 items-start"
             >
               <Label className="pt-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 {field.label}
@@ -207,10 +291,11 @@ export function DealForm({ dealId }: Props) {
                 )}
               </div>
 
-              {/* Value input */}
+              {/* Value input — key includes deal.updatedAt so inputs remount with fresh values */}
               <div>
                 {field.type === "textarea" ? (
                   <Textarea
+                    key={`${field.key}-${deal.updatedAt}`}
                     defaultValue={value}
                     disabled={!isEditable}
                     onBlur={(e) => handleFieldBlur(field.key, e.target.value)}
@@ -218,6 +303,7 @@ export function DealForm({ dealId }: Props) {
                   />
                 ) : (
                   <Input
+                    key={`${field.key}-${deal.updatedAt}`}
                     type={field.type === "currency" ? "number" : field.type}
                     defaultValue={value}
                     disabled={!isEditable}
@@ -228,6 +314,15 @@ export function DealForm({ dealId }: Props) {
                   <span className="text-xs text-muted-foreground">
                     Saving...
                   </span>
+                )}
+              </div>
+
+              {/* Stored in DB indicator */}
+              <div className="pt-1.5 flex justify-center">
+                {hasStoredValue ? (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                ) : (
+                  <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/20" />
                 )}
               </div>
 
@@ -273,6 +368,17 @@ export function DealForm({ dealId }: Props) {
             This deal has been approved.
           </p>
         )}
+        <div className="ml-auto">
+          <Button
+            onClick={handleDelete}
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs text-muted-foreground hover:text-red-600"
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1" />
+            Delete
+          </Button>
+        </div>
       </div>
 
       <AuditTimeline logs={auditLogs} />

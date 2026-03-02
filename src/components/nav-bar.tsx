@@ -10,6 +10,7 @@ const navItems = [
   { label: "Deals", href: "/deals" },
   { label: "My Tasks", href: "/my-tasks" },
   { label: "Snowflake Integration", href: "/snowflake" },
+  { label: "Snowflake Data", href: "/snowflake-data" },
   { label: "Database Schema", href: "/schema" },
   { label: "Admin", href: "/admin" },
 ];
@@ -21,9 +22,8 @@ export function NavBar() {
     <header className="bg-slate-900 text-white border-b border-slate-800">
       <div className="flex h-10 items-center px-4">
         <div className="flex items-center gap-2 mr-6">
-          <div className="h-5 w-5 rounded bg-blue-500 flex items-center justify-center">
-            <span className="text-[10px] font-bold text-white">DC</span>
-          </div>
+          <span className="text-sm font-bold tracking-wide">LGT</span>
+          <span className="text-slate-500">|</span>
           <span className="font-semibold text-sm tracking-tight">Deal Closing</span>
         </div>
         <nav className="flex items-center gap-0.5">

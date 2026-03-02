@@ -1,272 +1,154 @@
-import { Badge } from "@/components/ui/badge";
-
-type Column = {
-  name: string;
-  type: string;
-  constraints: string[];
-  fk?: string;
-};
-
-type TableDef = {
-  name: string;
-  columns: Column[];
-};
-
-const tables: TableDef[] = [
+const tables = [
   {
     name: "users",
-    columns: [
-      { name: "id", type: "TEXT", constraints: ["PK"] },
-      { name: "name", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "email", type: "TEXT", constraints: ["NOT NULL", "UNIQUE"] },
-      { name: "role", type: "TEXT", constraints: ["NOT NULL"] },
-    ],
+    purpose: "People who can enter or approve deals",
+    fields: ["id", "name", "email", "role"],
   },
   {
     name: "deals",
-    columns: [
-      { name: "id", type: "TEXT", constraints: ["PK"] },
-      { name: "name", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "counterparty", type: "TEXT", constraints: [] },
-      { name: "equity_ticker", type: "TEXT", constraints: [] },
-      { name: "investment_amount", type: "REAL", constraints: [] },
-      { name: "deal_date", type: "TEXT", constraints: [] },
-      { name: "settlement_date", type: "TEXT", constraints: [] },
-      { name: "notes", type: "TEXT", constraints: [] },
-      { name: "status", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "created_by", type: "TEXT", constraints: ["FK"], fk: "users.id" },
-      { name: "assigned_approver", type: "TEXT", constraints: ["FK"], fk: "users.id" },
-      { name: "created_at", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "updated_at", type: "TEXT", constraints: ["NOT NULL"] },
-    ],
-  },
-  {
-    name: "documents",
-    columns: [
-      { name: "id", type: "TEXT", constraints: ["PK"] },
-      { name: "deal_id", type: "TEXT", constraints: ["FK"], fk: "deals.id" },
-      { name: "filename", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "filepath", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "mime_type", type: "TEXT", constraints: [] },
-      { name: "uploaded_by", type: "TEXT", constraints: ["FK"], fk: "users.id" },
-      { name: "uploaded_at", type: "TEXT", constraints: ["NOT NULL"] },
+    purpose: "The deal record with all field values and current status",
+    fields: [
+      "id", "name", "counterparty", "equity_ticker", "investment_amount",
+      "deal_date", "settlement_date", "notes", "status", "created_by",
+      "assigned_approver", "created_at", "updated_at",
     ],
   },
   {
     name: "suggestions",
-    columns: [
-      { name: "id", type: "TEXT", constraints: ["PK"] },
-      { name: "deal_id", type: "TEXT", constraints: ["FK"], fk: "deals.id" },
-      { name: "field_name", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "suggested_value", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "document_id", type: "TEXT", constraints: ["FK"], fk: "documents.id" },
-      { name: "document_page", type: "INTEGER", constraints: [] },
-      { name: "status", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "created_at", type: "TEXT", constraints: ["NOT NULL"] },
+    purpose: "AI-proposed values waiting for human accept/dismiss",
+    fields: [
+      "id", "deal_id", "field_name", "suggested_value",
+      "document_id", "document_page", "status", "created_at",
     ],
   },
   {
     name: "audit_logs",
-    columns: [
-      { name: "id", type: "TEXT", constraints: ["PK"] },
-      { name: "deal_id", type: "TEXT", constraints: ["FK"], fk: "deals.id" },
-      { name: "user_id", type: "TEXT", constraints: ["FK"], fk: "users.id" },
-      { name: "action", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "field_name", type: "TEXT", constraints: [] },
-      { name: "old_value", type: "TEXT", constraints: [] },
-      { name: "new_value", type: "TEXT", constraints: [] },
-      { name: "source", type: "TEXT", constraints: [] },
-      { name: "document_id", type: "TEXT", constraints: ["FK"], fk: "documents.id" },
-      { name: "document_page", type: "INTEGER", constraints: [] },
-      { name: "comment", type: "TEXT", constraints: [] },
-      { name: "timestamp", type: "TEXT", constraints: ["NOT NULL"] },
+    purpose: "Every change to every field — who, when, what, and why",
+    fields: [
+      "id", "deal_id", "user_id", "action", "field_name",
+      "old_value", "new_value", "source", "document_id",
+      "document_page", "comment", "timestamp",
     ],
+  },
+  {
+    name: "documents",
+    purpose: "Uploaded files linked to deals",
+    fields: ["id", "deal_id", "filename", "filepath", "uploaded_by", "uploaded_at"],
   },
   {
     name: "notifications",
-    columns: [
-      { name: "id", type: "TEXT", constraints: ["PK"] },
-      { name: "user_id", type: "TEXT", constraints: ["FK"], fk: "users.id" },
-      { name: "deal_id", type: "TEXT", constraints: ["FK"], fk: "deals.id" },
-      { name: "message", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "read", type: "INTEGER", constraints: [] },
-      { name: "created_at", type: "TEXT", constraints: ["NOT NULL"] },
-    ],
+    purpose: "In-app alerts for users when action is needed",
+    fields: ["id", "user_id", "deal_id", "message", "read", "created_at"],
   },
   {
     name: "chat_messages",
-    columns: [
-      { name: "id", type: "TEXT", constraints: ["PK"] },
-      { name: "deal_id", type: "TEXT", constraints: ["FK"], fk: "deals.id" },
-      { name: "role", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "content", type: "TEXT", constraints: ["NOT NULL"] },
-      { name: "timestamp", type: "TEXT", constraints: ["NOT NULL"] },
-    ],
+    purpose: "Conversation history between users and the AI assistant",
+    fields: ["id", "deal_id", "role", "content", "timestamp"],
   },
 ];
 
-function TableCard({ table }: { table: TableDef }) {
-  return (
-    <div className="border rounded-md bg-card shadow-sm overflow-hidden">
-      <div className="bg-slate-900 text-white px-3 py-1.5">
-        <span className="text-xs font-semibold tracking-wide">{table.name}</span>
-      </div>
-      <div className="divide-y divide-border/50">
-        {table.columns.map((col) => (
-          <div key={col.name} className="flex items-center gap-2 px-3 py-1 text-[11px]">
-            <span className={`font-mono flex-1 ${col.constraints.includes("PK") ? "font-bold" : ""} ${col.fk ? "text-blue-600" : ""}`}>
-              {col.name}
-            </span>
-            <span className="text-muted-foreground font-mono">{col.type}</span>
-            <div className="flex gap-0.5">
-              {col.constraints.includes("PK") && (
-                <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 bg-amber-100 text-amber-800 border-amber-200">PK</Badge>
-              )}
-              {col.constraints.includes("FK") && (
-                <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 bg-blue-100 text-blue-700 border-blue-200">FK</Badge>
-              )}
-              {col.constraints.includes("NOT NULL") && (
-                <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">NN</Badge>
-              )}
-              {col.constraints.includes("UNIQUE") && (
-                <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">UQ</Badge>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+const relationships = [
+  { from: "deals", to: "users", description: "Tracks who created and who approves each deal" },
+  { from: "audit_logs", to: "deals, users, documents", description: "Links every change to a deal, a person, and optionally a source document" },
+  { from: "suggestions", to: "deals, documents", description: "Ties each AI suggestion to a deal and the document it came from" },
+  { from: "documents", to: "deals, users", description: "Links uploaded files to a deal and the person who uploaded them" },
+  { from: "notifications", to: "deals, users", description: "Connects alerts to the relevant deal and recipient" },
+  { from: "chat_messages", to: "deals", description: "Associates conversation messages with a deal" },
+];
 
 export default function SchemaPage() {
   return (
-    <div className="px-4 py-3 max-w-7xl mx-auto space-y-4">
+    <div className="px-4 py-3 max-w-5xl mx-auto space-y-4">
       <div>
         <h1 className="text-base font-semibold">Database Schema</h1>
         <p className="text-xs text-muted-foreground">
-          Entity-relationship diagram of the SQLite database powering the deal closing workflow.
+          How deal data is stored, audited, and approved.
         </p>
       </div>
 
-      {/* ER Diagram — 3-column grid layout */}
-      <div className="grid grid-cols-3 gap-4">
-        {/* Left column: users */}
-        <div className="space-y-4">
-          <TableCard table={tables[0]} />
+      {/* How it works — 3 cards */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="border rounded-md bg-card p-3 space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-5 rounded bg-blue-100 flex items-center justify-center shrink-0">
+              <span className="text-blue-700 text-[10px] font-bold">1</span>
+            </div>
+            <p className="text-xs font-semibold">Data Entry</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Values are stored in the <strong className="text-foreground">deals</strong> table. Every change &mdash; manual or AI &mdash; is logged in <strong className="text-foreground">audit_logs</strong> with who made it, when, and the old &amp; new value.
+          </p>
         </div>
 
-        {/* Center column: deals, suggestions */}
-        <div className="space-y-4">
-          <TableCard table={tables[1]} />
-          <TableCard table={tables[3]} />
+        <div className="border rounded-md bg-card p-3 space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-5 rounded bg-amber-100 flex items-center justify-center shrink-0">
+              <span className="text-amber-700 text-[10px] font-bold">2</span>
+            </div>
+            <p className="text-xs font-semibold">AI Suggestions</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            AI-proposed values go into a <strong className="text-foreground">suggestions</strong> staging table first &mdash; they never touch the deal directly. You accept or dismiss each one. Even dismissed suggestions are kept for the record.
+          </p>
         </div>
 
-        {/* Right column: documents, audit_logs, notifications, chat_messages */}
-        <div className="space-y-4">
-          <TableCard table={tables[2]} />
-          <TableCard table={tables[4]} />
-          <TableCard table={tables[5]} />
-          <TableCard table={tables[6]} />
-        </div>
-      </div>
-
-      {/* Foreign Key Legend */}
-      <div className="border rounded-md bg-card p-4 space-y-3">
-        <h2 className="text-sm font-semibold">Foreign Key Relationships</h2>
-        <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="border rounded-md bg-card p-3 space-y-1">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">deals.created_by</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">users.id</span>
+            <div className="h-5 w-5 rounded bg-emerald-100 flex items-center justify-center shrink-0">
+              <span className="text-emerald-700 text-[10px] font-bold">3</span>
+            </div>
+            <p className="text-xs font-semibold">Approval</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">deals.assigned_approver</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">users.id</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">audit_logs.deal_id</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">deals.id</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">audit_logs.user_id</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">users.id</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">audit_logs.document_id</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">documents.id</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">suggestions.deal_id</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">deals.id</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">suggestions.document_id</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">documents.id</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">documents.deal_id</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">deals.id</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">documents.uploaded_by</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">users.id</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">notifications.user_id</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">users.id</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">notifications.deal_id</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">deals.id</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-blue-600">chat_messages.deal_id</span>
-            <span className="text-muted-foreground">&rarr;</span>
-            <span className="font-mono">deals.id</span>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            When submitted, an approver reviews all fields. Approval (or rejection) is recorded in the audit log with the approver&apos;s identity and timestamp. The deal status updates accordingly.
+          </p>
         </div>
       </div>
 
-      {/* Audit Trail Flow Explanation */}
-      <div className="border rounded-md bg-card p-4 space-y-3">
-        <h2 className="text-sm font-semibold">How Status & Audit Trail Connect</h2>
-        <div className="text-xs text-muted-foreground space-y-2">
-          <p>
-            <strong className="text-foreground">deals.status</strong> holds the current workflow state of a deal:{" "}
-            <code className="bg-muted px-1 rounded">entry</code> &rarr;{" "}
-            <code className="bg-muted px-1 rounded">pending_approval</code> &rarr;{" "}
-            <code className="bg-muted px-1 rounded">approved</code> or{" "}
-            <code className="bg-muted px-1 rounded">rejected</code>.
-          </p>
-          <p>
-            <strong className="text-foreground">audit_logs</strong> records every state transition and field change. Each row links to{" "}
-            <strong className="text-foreground">users</strong> via{" "}
-            <code className="bg-muted px-1 rounded">user_id</code>, providing full accountability for who did what and when.
-          </p>
-          <p>
-            The <code className="bg-muted px-1 rounded">action</code> column tracks the type of change:{" "}
-            <code>CREATED</code>, <code>FIELD_UPDATED</code>, <code>AGENT_SUGGESTED</code>,{" "}
-            <code>AGENT_EXTRACTED</code>, <code>SUBMITTED</code>, <code>APPROVED</code>, <code>REJECTED</code>.
-          </p>
-          <p>
-            <strong className="text-foreground">suggestions</strong> stages AI-proposed values before they are accepted into the deal. When accepted, an <code>AGENT_EXTRACTED</code> audit entry is created, linking the accepted value back to the source{" "}
-            <strong className="text-foreground">document</strong> and page number.
-          </p>
-          <p>
-            <strong className="text-foreground">documents</strong> links to audit_logs via{" "}
-            <code className="bg-muted px-1 rounded">document_id</code>, providing traceability from any field value back to its source document and page.
-          </p>
+      {/* The bottom line */}
+      <div className="border rounded-md bg-muted/30 px-4 py-3">
+        <p className="text-xs text-muted-foreground">
+          <strong className="text-foreground">The bottom line:</strong> for any field on any deal, you can always answer <em>who set this value, when, whether it was manual or AI-driven, and if AI-driven, which document and page it came from</em>.
+        </p>
+      </div>
+
+      {/* Tables at a glance */}
+      <div className="border rounded-md bg-card overflow-hidden">
+        <div className="bg-slate-900 text-white px-4 py-2">
+          <span className="text-xs font-semibold">Tables at a Glance</span>
+        </div>
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground px-4 py-2">Table</th>
+              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground px-4 py-2">Purpose</th>
+              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground px-4 py-2">Fields</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tables.map((t) => (
+              <tr key={t.name} className="border-b border-border/50 hover:bg-muted/50">
+                <td className="px-4 py-1.5 text-xs font-mono font-semibold align-top whitespace-nowrap">{t.name}</td>
+                <td className="px-4 py-1.5 text-xs text-muted-foreground align-top">{t.purpose}</td>
+                <td className="px-4 py-1.5 text-[11px] text-muted-foreground font-mono align-top">{t.fields.join(", ")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Relationships */}
+      <div className="border rounded-md bg-card p-4 space-y-2">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Relationships</h2>
+        <div className="space-y-1.5">
+          {relationships.map((r) => (
+            <div key={r.from} className="flex gap-2 text-xs">
+              <span className="font-mono font-semibold shrink-0 w-28">{r.from}</span>
+              <span className="text-muted-foreground">&rarr;</span>
+              <span className="font-mono text-blue-600 shrink-0 w-44">{r.to}</span>
+              <span className="text-muted-foreground">{r.description}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

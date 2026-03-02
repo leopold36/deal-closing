@@ -11,11 +11,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const docs = db
+  const docs = await db
     .select()
     .from(documents)
-    .where(eq(documents.dealId, id))
-    .all();
+    .where(eq(documents.dealId, id));
   return NextResponse.json(docs);
 }
 
@@ -41,18 +40,16 @@ export async function POST(
   await writeFile(filepath, buffer);
 
   const docId = uuid();
-  db.insert(documents)
-    .values({
-      id: docId,
-      dealId: id,
-      filename,
-      filepath: `uploads/${id}/${filename}`,
-      mimeType: file.type,
-      uploadedBy: userId,
-      uploadedAt: new Date().toISOString(),
-    })
-    .run();
+  await db.insert(documents).values({
+    id: docId,
+    dealId: id,
+    filename,
+    filepath: `uploads/${id}/${filename}`,
+    mimeType: file.type,
+    uploadedBy: userId,
+    uploadedAt: new Date().toISOString(),
+  });
 
-  const doc = db.select().from(documents).where(eq(documents.id, docId)).get();
+  const [doc] = await db.select().from(documents).where(eq(documents.id, docId));
   return NextResponse.json(doc, { status: 201 });
 }

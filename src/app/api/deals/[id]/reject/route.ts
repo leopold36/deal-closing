@@ -12,38 +12,34 @@ export async function POST(
   const { userId, comment } = await req.json();
   const now = new Date().toISOString();
 
-  const deal = db.select().from(deals).where(eq(deals.id, id)).get();
+  const [deal] = await db.select().from(deals).where(eq(deals.id, id));
   if (!deal) {
     return NextResponse.json({ error: "Deal not found" }, { status: 404 });
   }
 
-  db.update(deals)
+  await db
+    .update(deals)
     .set({ status: "entry", assignedApprover: null, updatedAt: now })
-    .where(eq(deals.id, id))
-    .run();
+    .where(eq(deals.id, id));
 
-  db.insert(auditLogs)
-    .values({
-      id: uuid(),
-      dealId: id,
-      userId,
-      action: "REJECTED",
-      source: "manual",
-      comment,
-      timestamp: now,
-    })
-    .run();
+  await db.insert(auditLogs).values({
+    id: uuid(),
+    dealId: id,
+    userId,
+    action: "REJECTED",
+    source: "manual",
+    comment,
+    timestamp: now,
+  });
 
   if (deal.createdBy) {
-    db.insert(notifications)
-      .values({
-        id: uuid(),
-        userId: deal.createdBy,
-        dealId: id,
-        message: `Your deal was rejected: ${comment}`,
-        createdAt: now,
-      })
-      .run();
+    await db.insert(notifications).values({
+      id: uuid(),
+      userId: deal.createdBy,
+      dealId: id,
+      message: `Your deal was rejected: ${comment}`,
+      createdAt: now,
+    });
   }
 
   return NextResponse.json({ status: "rejected" });

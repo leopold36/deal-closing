@@ -11,12 +11,11 @@ export async function GET(req: Request) {
     return NextResponse.json([]);
   }
 
-  const messages = db
+  const messages = await db
     .select()
     .from(chatMessages)
     .where(eq(chatMessages.dealId, dealId))
-    .orderBy(asc(chatMessages.timestamp))
-    .all();
+    .orderBy(asc(chatMessages.timestamp));
 
   return NextResponse.json(messages);
 }

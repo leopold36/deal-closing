@@ -16,7 +16,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const deal = db.select().from(deals).where(eq(deals.id, id)).get();
+  const [deal] = await db.select().from(deals).where(eq(deals.id, id));
   if (!deal) {
     return NextResponse.json({ error: "Deal not found" }, { status: 404 });
   }
@@ -31,7 +31,7 @@ export async function PATCH(
   const body = await req.json();
   const { field, value, userId, source = "manual" } = body;
 
-  const deal = db.select().from(deals).where(eq(deals.id, id)).get();
+  const [deal] = await db.select().from(deals).where(eq(deals.id, id));
   if (!deal) {
     return NextResponse.json({ error: "Deal not found" }, { status: 404 });
   }
@@ -39,26 +39,24 @@ export async function PATCH(
   const oldValue = (deal as Record<string, unknown>)[field];
   const now = new Date().toISOString();
 
-  db.update(deals)
+  await db
+    .update(deals)
     .set({ [field]: value, updatedAt: now })
-    .where(eq(deals.id, id))
-    .run();
+    .where(eq(deals.id, id));
 
-  db.insert(auditLogs)
-    .values({
-      id: uuid(),
-      dealId: id,
-      userId,
-      action: source === "agent" ? "AGENT_EXTRACTED" : "FIELD_UPDATED",
-      fieldName: field,
-      oldValue: oldValue != null ? String(oldValue) : null,
-      newValue: value != null ? String(value) : null,
-      source,
-      timestamp: now,
-    })
-    .run();
+  await db.insert(auditLogs).values({
+    id: uuid(),
+    dealId: id,
+    userId,
+    action: source === "agent" ? "AGENT_EXTRACTED" : "FIELD_UPDATED",
+    fieldName: field,
+    oldValue: oldValue != null ? String(oldValue) : null,
+    newValue: value != null ? String(value) : null,
+    source,
+    timestamp: now,
+  });
 
-  const updated = db.select().from(deals).where(eq(deals.id, id)).get();
+  const [updated] = await db.select().from(deals).where(eq(deals.id, id));
   return NextResponse.json(updated);
 }
 
@@ -67,18 +65,18 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const deal = db.select().from(deals).where(eq(deals.id, id)).get();
+  const [deal] = await db.select().from(deals).where(eq(deals.id, id));
   if (!deal) {
     return NextResponse.json({ error: "Deal not found" }, { status: 404 });
   }
 
-  // Delete related rows first (no FK cascade in SQLite by default)
-  db.delete(chatMessages).where(eq(chatMessages.dealId, id)).run();
-  db.delete(notifications).where(eq(notifications.dealId, id)).run();
-  db.delete(suggestions).where(eq(suggestions.dealId, id)).run();
-  db.delete(auditLogs).where(eq(auditLogs.dealId, id)).run();
-  db.delete(documents).where(eq(documents.dealId, id)).run();
-  db.delete(deals).where(eq(deals.id, id)).run();
+  // Delete related rows first
+  await db.delete(chatMessages).where(eq(chatMessages.dealId, id));
+  await db.delete(notifications).where(eq(notifications.dealId, id));
+  await db.delete(suggestions).where(eq(suggestions.dealId, id));
+  await db.delete(auditLogs).where(eq(auditLogs.dealId, id));
+  await db.delete(documents).where(eq(documents.dealId, id));
+  await db.delete(deals).where(eq(deals.id, id));
 
   return NextResponse.json({ success: true });
 }

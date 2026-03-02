@@ -9,7 +9,7 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const logs = db
+  const logs = await db
     .select({
       id: auditLogs.id,
       dealId: auditLogs.dealId,
@@ -29,8 +29,7 @@ export async function GET(
     .from(auditLogs)
     .leftJoin(users, eq(auditLogs.userId, users.id))
     .where(eq(auditLogs.dealId, id))
-    .orderBy(desc(auditLogs.timestamp))
-    .all();
+    .orderBy(desc(auditLogs.timestamp));
 
   return NextResponse.json(logs);
 }

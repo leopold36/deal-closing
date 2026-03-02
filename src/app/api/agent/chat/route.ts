@@ -13,23 +13,20 @@ export async function POST(req: Request) {
   const { message, dealId, userId } = await req.json();
 
   // Save user message
-  db.insert(chatMessages)
-    .values({
-      id: uuid(),
-      dealId,
-      role: "user",
-      content: message,
-      timestamp: new Date().toISOString(),
-    })
-    .run();
+  await db.insert(chatMessages).values({
+    id: uuid(),
+    dealId,
+    role: "user",
+    content: message,
+    timestamp: new Date().toISOString(),
+  });
 
   // Get chat history
-  const history = db
+  const history = await db
     .select()
     .from(chatMessages)
     .where(eq(chatMessages.dealId, dealId))
-    .orderBy(asc(chatMessages.timestamp))
-    .all();
+    .orderBy(asc(chatMessages.timestamp));
 
   // Build messages array for conversation context
   const historyLines = history.map(
@@ -102,15 +99,13 @@ Be concise and professional. When dealing with documents, look for:
           }
 
           if (fullResponse) {
-            db.insert(chatMessages)
-              .values({
-                id: uuid(),
-                dealId,
-                role: "assistant",
-                content: fullResponse,
-                timestamp: new Date().toISOString(),
-              })
-              .run();
+            await db.insert(chatMessages).values({
+              id: uuid(),
+              dealId,
+              role: "assistant",
+              content: fullResponse,
+              timestamp: new Date().toISOString(),
+            });
           }
 
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));

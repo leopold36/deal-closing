@@ -12,11 +12,10 @@ export async function POST(
   const { userId } = await req.json();
   const now = new Date().toISOString();
 
-  const approver = db
+  const [approver] = await db
     .select()
     .from(users)
-    .where(eq(users.role, "approver"))
-    .get();
+    .where(eq(users.role, "approver"));
 
   if (!approver) {
     return NextResponse.json(
@@ -25,35 +24,31 @@ export async function POST(
     );
   }
 
-  db.update(deals)
+  await db
+    .update(deals)
     .set({
       status: "pending_approval",
       assignedApprover: approver.id,
       updatedAt: now,
     })
-    .where(eq(deals.id, id))
-    .run();
+    .where(eq(deals.id, id));
 
-  db.insert(auditLogs)
-    .values({
-      id: uuid(),
-      dealId: id,
-      userId,
-      action: "SUBMITTED",
-      source: "manual",
-      timestamp: now,
-    })
-    .run();
+  await db.insert(auditLogs).values({
+    id: uuid(),
+    dealId: id,
+    userId,
+    action: "SUBMITTED",
+    source: "manual",
+    timestamp: now,
+  });
 
-  db.insert(notifications)
-    .values({
-      id: uuid(),
-      userId: approver.id,
-      dealId: id,
-      message: `Deal requires your approval`,
-      createdAt: now,
-    })
-    .run();
+  await db.insert(notifications).values({
+    id: uuid(),
+    userId: approver.id,
+    dealId: id,
+    message: `Deal requires your approval`,
+    createdAt: now,
+  });
 
   return NextResponse.json({ status: "submitted" });
 }

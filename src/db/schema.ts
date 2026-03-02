@@ -1,18 +1,18 @@
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import { pgTable, text, doublePrecision, integer, boolean } from "drizzle-orm/pg-core";
 
-export const users = sqliteTable("users", {
+export const users = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   role: text("role", { enum: ["entry", "approver", "admin"] }).notNull(),
 });
 
-export const deals = sqliteTable("deals", {
+export const deals = pgTable("deals", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   counterparty: text("counterparty"),
   equityTicker: text("equity_ticker"),
-  investmentAmount: real("investment_amount"),
+  investmentAmount: doublePrecision("investment_amount"),
   dealDate: text("deal_date"),
   settlementDate: text("settlement_date"),
   notes: text("notes"),
@@ -27,7 +27,7 @@ export const deals = sqliteTable("deals", {
   updatedAt: text("updated_at").notNull(),
 });
 
-export const documents = sqliteTable("documents", {
+export const documents = pgTable("documents", {
   id: text("id").primaryKey(),
   dealId: text("deal_id").references(() => deals.id),
   filename: text("filename").notNull(),
@@ -37,7 +37,7 @@ export const documents = sqliteTable("documents", {
   uploadedAt: text("uploaded_at").notNull(),
 });
 
-export const auditLogs = sqliteTable("audit_logs", {
+export const auditLogs = pgTable("audit_logs", {
   id: text("id").primaryKey(),
   dealId: text("deal_id").references(() => deals.id),
   userId: text("user_id").references(() => users.id),
@@ -62,7 +62,7 @@ export const auditLogs = sqliteTable("audit_logs", {
   timestamp: text("timestamp").notNull(),
 });
 
-export const suggestions = sqliteTable("suggestions", {
+export const suggestions = pgTable("suggestions", {
   id: text("id").primaryKey(),
   dealId: text("deal_id").references(() => deals.id),
   fieldName: text("field_name").notNull(),
@@ -77,16 +77,16 @@ export const suggestions = sqliteTable("suggestions", {
   createdAt: text("created_at").notNull(),
 });
 
-export const notifications = sqliteTable("notifications", {
+export const notifications = pgTable("notifications", {
   id: text("id").primaryKey(),
   userId: text("user_id").references(() => users.id),
   dealId: text("deal_id").references(() => deals.id),
   message: text("message").notNull(),
-  read: integer("read", { mode: "boolean" }).default(false),
+  read: boolean("read").default(false),
   createdAt: text("created_at").notNull(),
 });
 
-export const chatMessages = sqliteTable("chat_messages", {
+export const chatMessages = pgTable("chat_messages", {
   id: text("id").primaryKey(),
   dealId: text("deal_id").references(() => deals.id),
   role: text("role", { enum: ["user", "assistant"] }).notNull(),

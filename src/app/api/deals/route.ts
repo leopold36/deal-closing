@@ -5,7 +5,7 @@ import { v4 as uuid } from "uuid";
 import { desc, eq } from "drizzle-orm";
 
 export async function GET() {
-  const allDeals = db.select().from(deals).orderBy(desc(deals.createdAt)).all();
+  const allDeals = await db.select().from(deals).orderBy(desc(deals.createdAt));
   return NextResponse.json(allDeals);
 }
 
@@ -16,28 +16,24 @@ export async function POST(req: Request) {
   const now = new Date().toISOString();
   const dealId = uuid();
 
-  db.insert(deals)
-    .values({
-      id: dealId,
-      name,
-      status: "entry",
-      createdBy: userId,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .run();
+  await db.insert(deals).values({
+    id: dealId,
+    name,
+    status: "entry",
+    createdBy: userId,
+    createdAt: now,
+    updatedAt: now,
+  });
 
-  db.insert(auditLogs)
-    .values({
-      id: uuid(),
-      dealId,
-      userId,
-      action: "CREATED",
-      source: "manual",
-      timestamp: now,
-    })
-    .run();
+  await db.insert(auditLogs).values({
+    id: uuid(),
+    dealId,
+    userId,
+    action: "CREATED",
+    source: "manual",
+    timestamp: now,
+  });
 
-  const deal = db.select().from(deals).where(eq(deals.id, dealId)).get();
+  const [deal] = await db.select().from(deals).where(eq(deals.id, dealId));
   return NextResponse.json(deal, { status: 201 });
 }

@@ -1,21 +1,20 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { deals, users, auditLogs } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export async function GET() {
-  const allDeals = db.select().from(deals).orderBy(desc(deals.createdAt)).all();
+  const allDeals = await db.select().from(deals).orderBy(desc(deals.createdAt));
 
-  const allUsers = db.select().from(users).all();
+  const allUsers = await db.select().from(users);
   const userMap = new Map(allUsers.map((u) => [u.id, u]));
 
   // Get APPROVED audit entries to find approver info
-  const approvedLogs = db
+  const approvedLogs = await db
     .select()
     .from(auditLogs)
     .where(eq(auditLogs.action, "APPROVED"))
-    .orderBy(desc(auditLogs.timestamp))
-    .all();
+    .orderBy(desc(auditLogs.timestamp));
 
   const approverByDeal = new Map(
     approvedLogs.map((log) => [

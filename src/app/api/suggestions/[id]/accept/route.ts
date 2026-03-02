@@ -11,11 +11,10 @@ export async function POST(
   const { id } = await params;
   const { userId } = await req.json();
 
-  const suggestion = db
+  const [suggestion] = await db
     .select()
     .from(suggestions)
-    .where(eq(suggestions.id, id))
-    .get();
+    .where(eq(suggestions.id, id));
   if (!suggestion) {
     return NextResponse.json(
       { error: "Suggestion not found" },
@@ -30,11 +29,10 @@ export async function POST(
     );
   }
 
-  const deal = db
+  const [deal] = await db
     .select()
     .from(deals)
-    .where(eq(deals.id, suggestion.dealId))
-    .get();
+    .where(eq(deals.id, suggestion.dealId));
   if (!deal) {
     return NextResponse.json({ error: "Deal not found" }, { status: 404 });
   }
@@ -47,33 +45,31 @@ export async function POST(
       : suggestion.suggestedValue;
 
   // Update the deal field
-  db.update(deals)
+  await db
+    .update(deals)
     .set({ [suggestion.fieldName]: fieldValue, updatedAt: now })
-    .where(eq(deals.id, suggestion.dealId))
-    .run();
+    .where(eq(deals.id, suggestion.dealId));
 
   // Mark suggestion as accepted
-  db.update(suggestions)
+  await db
+    .update(suggestions)
     .set({ status: "accepted" })
-    .where(eq(suggestions.id, id))
-    .run();
+    .where(eq(suggestions.id, id));
 
   // Create audit log
-  db.insert(auditLogs)
-    .values({
-      id: uuid(),
-      dealId: suggestion.dealId,
-      userId,
-      action: "AGENT_EXTRACTED",
-      fieldName: suggestion.fieldName,
-      oldValue: oldValue != null ? String(oldValue) : null,
-      newValue: suggestion.suggestedValue,
-      source: "agent",
-      documentId: suggestion.documentId,
-      documentPage: suggestion.documentPage,
-      timestamp: now,
-    })
-    .run();
+  await db.insert(auditLogs).values({
+    id: uuid(),
+    dealId: suggestion.dealId,
+    userId,
+    action: "AGENT_EXTRACTED",
+    fieldName: suggestion.fieldName,
+    oldValue: oldValue != null ? String(oldValue) : null,
+    newValue: suggestion.suggestedValue,
+    source: "agent",
+    documentId: suggestion.documentId,
+    documentPage: suggestion.documentPage,
+    timestamp: now,
+  });
 
   return NextResponse.json({ success: true });
 }

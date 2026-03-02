@@ -8,10 +8,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const rows = db
+  const rows = await db
     .select()
     .from(suggestions)
-    .where(and(eq(suggestions.dealId, id), eq(suggestions.status, "pending")))
-    .all();
+    .where(and(eq(suggestions.dealId, id), eq(suggestions.status, "pending")));
   return NextResponse.json(rows);
 }

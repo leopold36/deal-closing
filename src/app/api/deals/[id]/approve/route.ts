@@ -12,37 +12,33 @@ export async function POST(
   const { userId } = await req.json();
   const now = new Date().toISOString();
 
-  const deal = db.select().from(deals).where(eq(deals.id, id)).get();
+  const [deal] = await db.select().from(deals).where(eq(deals.id, id));
   if (!deal) {
     return NextResponse.json({ error: "Deal not found" }, { status: 404 });
   }
 
-  db.update(deals)
+  await db
+    .update(deals)
     .set({ status: "approved", updatedAt: now })
-    .where(eq(deals.id, id))
-    .run();
+    .where(eq(deals.id, id));
 
-  db.insert(auditLogs)
-    .values({
-      id: uuid(),
-      dealId: id,
-      userId,
-      action: "APPROVED",
-      source: "manual",
-      timestamp: now,
-    })
-    .run();
+  await db.insert(auditLogs).values({
+    id: uuid(),
+    dealId: id,
+    userId,
+    action: "APPROVED",
+    source: "manual",
+    timestamp: now,
+  });
 
   if (deal.createdBy) {
-    db.insert(notifications)
-      .values({
-        id: uuid(),
-        userId: deal.createdBy,
-        dealId: id,
-        message: `Your deal has been approved`,
-        createdAt: now,
-      })
-      .run();
+    await db.insert(notifications).values({
+      id: uuid(),
+      userId: deal.createdBy,
+      dealId: id,
+      message: `Your deal has been approved`,
+      createdAt: now,
+    });
   }
 
   return NextResponse.json({ status: "approved" });

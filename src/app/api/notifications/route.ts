@@ -11,12 +11,11 @@ export async function GET(req: Request) {
     return NextResponse.json([]);
   }
 
-  const results = db
+  const results = await db
     .select()
     .from(notifications)
     .where(eq(notifications.userId, userId))
-    .orderBy(desc(notifications.createdAt))
-    .all();
+    .orderBy(desc(notifications.createdAt));
 
   return NextResponse.json(results);
 }

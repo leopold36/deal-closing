@@ -12,7 +12,7 @@ const getDealStatus = tool(
     dealId: z.string().describe("The deal ID"),
   },
   async ({ dealId }) => {
-    const deal = db.select().from(deals).where(eq(deals.id, dealId)).get();
+    const [deal] = await db.select().from(deals).where(eq(deals.id, dealId));
     if (!deal) {
       return { content: [{ type: "text" as const, text: "Deal not found" }] };
     }
@@ -50,41 +50,37 @@ const suggestDealField = tool(
       .describe("The page number if extracted from a document"),
   },
   async ({ dealId, field, value, userId, documentId, documentPage }) => {
-    const deal = db.select().from(deals).where(eq(deals.id, dealId)).get();
+    const [deal] = await db.select().from(deals).where(eq(deals.id, dealId));
     if (!deal) {
       return { content: [{ type: "text" as const, text: "Deal not found" }] };
     }
 
     const now = new Date().toISOString();
 
-    db.insert(suggestions)
-      .values({
-        id: uuid(),
-        dealId,
-        fieldName: field,
-        suggestedValue: value,
-        documentId: documentId ?? null,
-        documentPage: documentPage ?? null,
-        status: "pending",
-        createdAt: now,
-      })
-      .run();
+    await db.insert(suggestions).values({
+      id: uuid(),
+      dealId,
+      fieldName: field,
+      suggestedValue: value,
+      documentId: documentId ?? null,
+      documentPage: documentPage ?? null,
+      status: "pending",
+      createdAt: now,
+    });
 
-    db.insert(auditLogs)
-      .values({
-        id: uuid(),
-        dealId,
-        userId,
-        action: "AGENT_SUGGESTED",
-        fieldName: field,
-        oldValue: null,
-        newValue: value,
-        source: "agent",
-        documentId: documentId ?? null,
-        documentPage: documentPage ?? null,
-        timestamp: now,
-      })
-      .run();
+    await db.insert(auditLogs).values({
+      id: uuid(),
+      dealId,
+      userId,
+      action: "AGENT_SUGGESTED",
+      fieldName: field,
+      oldValue: null,
+      newValue: value,
+      source: "agent",
+      documentId: documentId ?? null,
+      documentPage: documentPage ?? null,
+      timestamp: now,
+    });
 
     return {
       content: [
@@ -106,11 +102,10 @@ const sendNotification = tool(
     message: z.string().describe("The notification message"),
   },
   async ({ userEmail, dealId, message }) => {
-    const user = db
+    const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.email, userEmail))
-      .get();
+      .where(eq(users.email, userEmail));
     if (!user) {
       return {
         content: [
@@ -119,15 +114,13 @@ const sendNotification = tool(
       };
     }
 
-    db.insert(notifications)
-      .values({
-        id: uuid(),
-        userId: user.id,
-        dealId,
-        message,
-        createdAt: new Date().toISOString(),
-      })
-      .run();
+    await db.insert(notifications).values({
+      id: uuid(),
+      userId: user.id,
+      dealId,
+      message,
+      createdAt: new Date().toISOString(),
+    });
 
     return {
       content: [

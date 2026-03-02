@@ -42,7 +42,7 @@ type Props = {
 
 export function DealForm({ dealId }: Props) {
   const router = useRouter();
-  const { currentUser } = useUser();
+  const { currentUser, users, setCurrentUser } = useUser();
   const { data: deal, mutate: mutateDeal } = useSWR<Deal>(
     `/api/deals/${dealId}`,
     fetcher
@@ -168,7 +168,13 @@ export function DealForm({ dealId }: Props) {
   ];
 
   const handleLoadDummy = async (data: Record<string, string>) => {
-    if (!currentUser) return;
+    // Always use the entry user for data entry
+    const entryUser = users.find((u) => u.role === "entry");
+    if (!entryUser) return;
+
+    // Switch to entry user
+    setCurrentUser(entryUser);
+
     for (const [field, value] of Object.entries(data)) {
       await fetch(`/api/deals/${dealId}`, {
         method: "PATCH",
@@ -176,11 +182,25 @@ export function DealForm({ dealId }: Props) {
         body: JSON.stringify({
           field,
           value: value || null,
-          userId: currentUser.id,
+          userId: entryUser.id,
           source: "manual",
         }),
       });
     }
+
+    // Submit for approval as entry user
+    await fetch(`/api/deals/${dealId}/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: entryUser.id }),
+    });
+
+    // Switch to approver user
+    const approverUser = users.find((u) => u.role === "approver");
+    if (approverUser) {
+      setCurrentUser(approverUser);
+    }
+
     mutateDeal();
     mutate(`/api/deals/${dealId}/audit`);
   };

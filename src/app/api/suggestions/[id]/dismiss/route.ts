@@ -9,11 +9,10 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  const suggestion = db
+  const [suggestion] = await db
     .select()
     .from(suggestions)
-    .where(eq(suggestions.id, id))
-    .get();
+    .where(eq(suggestions.id, id));
   if (!suggestion) {
     return NextResponse.json(
       { error: "Suggestion not found" },
@@ -21,10 +20,10 @@ export async function POST(
     );
   }
 
-  db.update(suggestions)
+  await db
+    .update(suggestions)
     .set({ status: "dismissed" })
-    .where(eq(suggestions.id, id))
-    .run();
+    .where(eq(suggestions.id, id));
 
   return NextResponse.json({ success: true });
 }

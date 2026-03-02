@@ -166,30 +166,50 @@ export function DealForm({ dealId }: Props) {
         </Badge>
       </div>
 
-      {/* Status banner */}
+      {/* Status banner — role-aware messaging */}
       {deal.status === "entry" && (
         <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-          <span className="font-semibold">Data Entry Mode</span> — Fill in the deal fields below. Once complete, submit for approval by the Portfolio Manager.
+          {currentUser?.role === "approver" ? (
+            <><span className="font-semibold">Data Entry</span> — This deal is being prepared by the data entry team.</>
+          ) : (
+            <><span className="font-semibold">Data Entry Mode</span> — Fill in the deal fields below. Once complete, submit for approval by the Portfolio Manager.</>
+          )}
         </div>
       )}
       {deal.status === "pending_approval" && (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-          <span className="font-semibold">Pending Approval</span> — This deal is awaiting review by the Portfolio Manager.
+          {currentUser?.role === "approver" ? (
+            <><span className="font-semibold">Your Review Required</span> — Please verify all deal values and approve or reject this submission.</>
+          ) : (
+            <><span className="font-semibold">Pending Approval</span> — This deal has been submitted and is awaiting review by the Portfolio Manager.</>
+          )}
         </div>
       )}
       {deal.status === "approved" && (
         <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-          <span className="font-semibold">Approved</span> — This deal has been approved by the Portfolio Manager.
+          {currentUser?.role === "approver" ? (
+            <><span className="font-semibold">Approved</span> — You have approved this deal.</>
+          ) : (
+            <><span className="font-semibold">Approved</span> — This deal has been approved by the Portfolio Manager.</>
+          )}
         </div>
       )}
       {deal.status === "rejected" && (
         <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
-          <span className="font-semibold">Rejected</span> — This deal was sent back for revision. Update the fields and resubmit.
+          {currentUser?.role === "approver" ? (
+            <><span className="font-semibold">Rejected</span> — You have rejected this deal and sent it back for revision.</>
+          ) : (
+            <><span className="font-semibold">Rejected</span> — This deal was sent back for revision. Update the fields and resubmit.</>
+          )}
         </div>
       )}
       {deal.status === "recalled" && (
         <div className="rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-800">
-          <span className="font-semibold">Recalled</span> — This deal was recalled from approval. Update the fields and resubmit when ready.
+          {currentUser?.role === "approver" ? (
+            <><span className="font-semibold">Recalled</span> — This deal was recalled by the entry team and is being revised.</>
+          ) : (
+            <><span className="font-semibold">Recalled</span> — This deal was recalled from approval. Update the fields and resubmit when ready.</>
+          )}
         </div>
       )}
 
@@ -274,6 +294,11 @@ export function DealForm({ dealId }: Props) {
                     defaultValue={value}
                     disabled={!isEditable}
                     onBlur={(e) => handleFieldBlur(field.key, e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
                   />
                 )}
                 {saving === field.key && (

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { deals, auditLogs, notifications, users } from "@/db/schema";
+import { deals, auditLogs, notifications, users, fieldApprovals } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 
@@ -24,6 +24,9 @@ export async function POST(
       updatedAt: now,
     })
     .where(eq(deals.id, id));
+
+  // Clear all field approvals
+  await db.delete(fieldApprovals).where(eq(fieldApprovals.dealId, id));
 
   await db.insert(auditLogs).values({
     id: uuid(),

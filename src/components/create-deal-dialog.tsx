@@ -14,12 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, FlaskConical } from "lucide-react";
+import { Plus, FlaskConical, Loader2 } from "lucide-react";
 import { mutate } from "swr";
 
 export function CreateDealDialog() {
   const [open, setOpen] = useState(false);
   const [customName, setCustomName] = useState("");
+  const [selectedDemo, setSelectedDemo] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
   const { currentUser } = useUser();
   const router = useRouter();
@@ -51,6 +52,7 @@ export function CreateDealDialog() {
     }
 
     setCustomName("");
+    setSelectedDemo(null);
     setCreating(false);
     setOpen(false);
     mutate("/api/deals");
@@ -60,7 +62,7 @@ export function CreateDealDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-7 text-xs">
+        <Button size="sm" className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold">
           <Plus className="h-3 w-3 mr-1.5" />
           New Deal
         </Button>
@@ -76,12 +78,16 @@ export function CreateDealDialog() {
               Demo deals (pre-filled with sample data)
             </Label>
             <div className="grid grid-cols-2 gap-2">
-              {DEMO_DEALS.map((demo) => (
+              {DEMO_DEALS.map((demo, idx) => (
                 <button
                   key={demo.name}
-                  onClick={() => createDeal(demo.name, demo.data)}
+                  onClick={() => { setSelectedDemo(idx); setCustomName(""); }}
                   disabled={creating}
-                  className="text-left rounded-md border px-3 py-2 text-xs hover:bg-muted/50 hover:border-primary/30 transition-colors disabled:opacity-50"
+                  className={`text-left rounded-md border px-3 py-2 text-xs transition-colors disabled:opacity-50 ${
+                    selectedDemo === idx
+                      ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500"
+                      : "hover:bg-muted/50 hover:border-primary/30"
+                  }`}
                 >
                   <span className="font-medium">{demo.label}</span>
                 </button>
@@ -99,18 +105,28 @@ export function CreateDealDialog() {
           <div className="space-y-2">
             <Input
               value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
+              onChange={(e) => { setCustomName(e.target.value); setSelectedDemo(null); }}
               placeholder="e.g., Acme Corp Acquisition"
-              onKeyDown={(e) => e.key === "Enter" && createDeal(customName)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && customName.trim()) createDeal(customName);
+              }}
               disabled={creating}
               className="text-xs"
             />
             <Button
-              onClick={() => createDeal(customName)}
-              className="w-full"
-              disabled={!customName.trim() || creating}
+              onClick={() => {
+                if (selectedDemo !== null) {
+                  const demo = DEMO_DEALS[selectedDemo];
+                  createDeal(demo.name, demo.data);
+                } else {
+                  createDeal(customName);
+                }
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+              disabled={(!customName.trim() && selectedDemo === null) || creating}
             >
-              Create Deal
+              {creating && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+              {creating ? "Creating..." : "Create Deal"}
             </Button>
           </div>
         </div>

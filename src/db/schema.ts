@@ -78,6 +78,14 @@ export const suggestions = pgTable("suggestions", {
   createdAt: text("created_at").notNull(),
 });
 
+export const fieldApprovals = pgTable("field_approvals", {
+  id: text("id").primaryKey(),
+  dealId: text("deal_id").references(() => deals.id),
+  fieldName: text("field_name").notNull(),
+  approvedBy: text("approved_by").references(() => users.id),
+  approvedAt: text("approved_at").notNull(),
+});
+
 export const notifications = pgTable("notifications", {
   id: text("id").primaryKey(),
   userId: text("user_id").references(() => users.id),

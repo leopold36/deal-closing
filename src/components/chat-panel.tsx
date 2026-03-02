@@ -149,8 +149,8 @@ export function ChatPanel({ dealId }: Props) {
                 <div
                   className={`rounded-md px-2.5 py-1.5 max-w-[85%] text-xs ${
                     msg.role === "user"
-                      ? "bg-primary text-primary-foreground whitespace-pre-wrap"
-                      : "bg-muted prose prose-xs prose-neutral dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_pre]:my-1 [&_pre]:p-2 [&_pre]:rounded [&_pre]:bg-black/5 [&_code]:text-[11px] [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_p]:text-xs [&_li]:text-xs"
+                      ? "bg-slate-700 text-white whitespace-pre-wrap"
+                      : "bg-muted prose prose-xs prose-neutral dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_pre]:my-1 [&_pre]:p-2 [&_pre]:rounded [&_pre]:bg-slate-900/5 [&_code]:text-[11px] [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_p]:text-xs [&_li]:text-xs"
                   }`}
                 >
                   {msg.role === "assistant" ? (
@@ -160,8 +160,8 @@ export function ChatPanel({ dealId }: Props) {
                   )}
                 </div>
                 {msg.role === "user" && (
-                  <div className="mt-0.5 p-1 rounded bg-primary shrink-0">
-                    <User className="h-3 w-3 text-primary-foreground" />
+                  <div className="mt-0.5 p-1 rounded bg-slate-700 shrink-0">
+                    <User className="h-3 w-3 text-white" />
                   </div>
                 )}
               </div>
@@ -171,7 +171,7 @@ export function ChatPanel({ dealId }: Props) {
                 <div className="mt-0.5 p-1 rounded bg-muted shrink-0">
                   <Bot className="h-3 w-3" />
                 </div>
-                <div className="rounded-md px-2.5 py-1.5 max-w-[85%] text-xs bg-muted prose prose-xs prose-neutral dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_pre]:my-1 [&_pre]:p-2 [&_pre]:rounded [&_pre]:bg-black/5 [&_code]:text-[11px] [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_p]:text-xs [&_li]:text-xs">
+                <div className="rounded-md px-2.5 py-1.5 max-w-[85%] text-xs bg-muted prose prose-xs prose-neutral dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_pre]:my-1 [&_pre]:p-2 [&_pre]:rounded [&_pre]:bg-slate-900/5 [&_code]:text-[11px] [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_p]:text-xs [&_li]:text-xs">
                   <ReactMarkdown>{streamingText}</ReactMarkdown>
                 </div>
               </div>
@@ -218,7 +218,7 @@ export function ChatPanel({ dealId }: Props) {
           />
           <Button
             size="icon"
-            className="h-7 w-7"
+            className="h-7 w-7 bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || streaming}
           >

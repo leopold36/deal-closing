@@ -61,6 +61,14 @@ export type Suggestion = {
   createdAt: string;
 };
 
+export type FieldApproval = {
+  id: string;
+  dealId: string;
+  fieldName: string;
+  approvedBy: string;
+  approvedAt: string;
+};
+
 export const DEAL_FIELDS = [
   { key: "name", label: "Deal Name", type: "text" },
   { key: "counterparty", label: "Counterparty", type: "text" },

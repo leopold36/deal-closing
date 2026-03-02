@@ -7,8 +7,9 @@ import {
   documents,
   notifications,
   chatMessages,
+  fieldApprovals,
 } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 
 export async function GET(
@@ -56,6 +57,13 @@ export async function PATCH(
     timestamp: now,
   });
 
+  // Clear field approval when a field value is edited (approver must re-verify)
+  await db
+    .delete(fieldApprovals)
+    .where(
+      and(eq(fieldApprovals.dealId, id), eq(fieldApprovals.fieldName, field))
+    );
+
   const [updated] = await db.select().from(deals).where(eq(deals.id, id));
   return NextResponse.json(updated);
 }
@@ -73,6 +81,7 @@ export async function DELETE(
   // Delete related rows first
   await db.delete(chatMessages).where(eq(chatMessages.dealId, id));
   await db.delete(notifications).where(eq(notifications.dealId, id));
+  await db.delete(fieldApprovals).where(eq(fieldApprovals.dealId, id));
   await db.delete(suggestions).where(eq(suggestions.dealId, id));
   await db.delete(auditLogs).where(eq(auditLogs.dealId, id));
   await db.delete(documents).where(eq(documents.dealId, id));

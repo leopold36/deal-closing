@@ -31,6 +31,7 @@ export function DealsList() {
   const handleDelete = async (e: React.MouseEvent, dealId: string) => {
     e.stopPropagation();
     if (!confirm("Are you sure you want to delete this deal? This cannot be undone.")) return;
+    mutateDeals(deals.filter((d) => d.id !== dealId), false);
     await fetch(`/api/deals/${dealId}`, { method: "DELETE" });
     mutateDeals();
   };
@@ -48,14 +49,14 @@ export function DealsList() {
   }
 
   return (
-    <table className="w-full financial-table">
+    <table className="w-full financial-table text-[12px]">
       <thead>
         <tr className="border-b bg-muted/30">
-          <th className="text-left px-3 py-2">Deal Name</th>
-          <th className="text-left px-3 py-2">Status</th>
-          <th className="text-right px-3 py-2">Updated</th>
-          <th className="px-3 py-2 w-10"></th>
-          <th className="px-3 py-2 w-8"></th>
+          <th className="text-left px-3 py-1.5">Deal Name</th>
+          <th className="text-left px-3 py-1.5">Status</th>
+          <th className="text-right px-3 py-1.5">Updated</th>
+          <th className="px-3 py-1.5 w-10"></th>
+          <th className="px-3 py-1.5 w-8"></th>
         </tr>
       </thead>
       <tbody>

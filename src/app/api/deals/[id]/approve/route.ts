@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { deals, auditLogs, notifications } from "@/db/schema";
+import { deals, auditLogs, notifications, fieldApprovals } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { DEAL_FIELDS } from "@/lib/types";
 import { v4 as uuid } from "uuid";
 
 export async function POST(
@@ -30,6 +31,18 @@ export async function POST(
     source: "manual",
     timestamp: now,
   });
+
+  // Bulk-insert field approvals for all fields
+  await db.delete(fieldApprovals).where(eq(fieldApprovals.dealId, id));
+  await db.insert(fieldApprovals).values(
+    DEAL_FIELDS.map((f) => ({
+      id: uuid(),
+      dealId: id,
+      fieldName: f.key,
+      approvedBy: userId,
+      approvedAt: now,
+    }))
+  );
 
   if (deal.createdBy) {
     await db.insert(notifications).values({

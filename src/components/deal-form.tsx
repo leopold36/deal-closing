@@ -174,7 +174,7 @@ export function DealForm({ dealId }: Props) {
       {deal.status === "entry" && (
         <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
           {currentUser?.role === "approver" ? (
-            <><span className="font-semibold">Data Entry</span> — This deal is being prepared by the data entry team.</>
+            <><span className="font-semibold">Data Entry</span> — This deal is being prepared by the data entry team. Values are read-only until submitted for your approval.</>
           ) : (
             <><span className="font-semibold">Data Entry Mode</span> — Fill in the deal fields below. Once complete, submit for approval by the Portfolio Manager.</>
           )}

@@ -25,8 +25,8 @@ export function NotificationBell() {
     refreshInterval: 5000,
   });
 
-  // Badge count = actual pending tasks for this user
-  const taskCount = currentUser
+  // Pending tasks for this user
+  const myTasks = currentUser
     ? deals.filter((d) => {
         const isMyEntry =
           d.createdBy === currentUser.id &&
@@ -35,8 +35,9 @@ export function NotificationBell() {
           d.assignedApprover === currentUser.id &&
           d.status === "pending_approval";
         return isMyEntry || isMyApproval;
-      }).length
-    : 0;
+      })
+    : [];
+  const taskCount = myTasks.length;
 
   async function markAllRead() {
     if (!currentUser || notifications.length === 0) return;
@@ -61,9 +62,12 @@ export function NotificationBell() {
       <PopoverContent className="w-80" align="end">
         <div className="space-y-2">
           <h4 className="font-medium text-sm">Notifications</h4>
-          {notifications.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No notifications</p>
-          ) : (
+          {taskCount > 0 && (
+            <div className="p-2 rounded text-sm bg-blue-50 text-blue-700 border border-blue-100">
+              {taskCount} pending {taskCount === 1 ? "task" : "tasks"}
+            </div>
+          )}
+          {notifications.length > 0 &&
             notifications.map((n: { id: string; message: string; read: boolean; createdAt: string }) => (
               <div
                 key={n.id}
@@ -74,7 +78,9 @@ export function NotificationBell() {
               >
                 {n.message}
               </div>
-            ))
+            ))}
+          {taskCount === 0 && notifications.length === 0 && (
+            <p className="text-sm text-muted-foreground">No notifications</p>
           )}
         </div>
       </PopoverContent>

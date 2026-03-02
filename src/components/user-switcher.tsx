@@ -9,20 +9,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
-const roleColors: Record<string, { bg: string; text: string; border: string; avatar: string }> = {
-  entry: { bg: "bg-blue-500/20", text: "text-blue-300", border: "border-blue-400/50", avatar: "bg-blue-600 text-blue-100" },
-  approver: { bg: "bg-amber-500/20", text: "text-amber-300", border: "border-amber-400/50", avatar: "bg-amber-600 text-amber-100" },
-  admin: { bg: "bg-emerald-500/20", text: "text-emerald-300", border: "border-emerald-400/50", avatar: "bg-emerald-600 text-emerald-100" },
-};
-
-const roleLabels: Record<string, string> = {
-  entry: "Data Entry",
-  approver: "Portfolio Manager",
-  admin: "Admin",
+const roleConfig: Record<string, { label: string; badge: string; avatar: string; dropdownBadge: string }> = {
+  entry: {
+    label: "Data Entry",
+    badge: "bg-blue-500 text-white",
+    avatar: "bg-blue-600 text-white",
+    dropdownBadge: "border-blue-300 text-blue-700 bg-blue-50",
+  },
+  approver: {
+    label: "Approver / Portfolio Manager",
+    badge: "bg-amber-500 text-white",
+    avatar: "bg-amber-600 text-white",
+    dropdownBadge: "border-amber-300 text-amber-700 bg-amber-50",
+  },
+  admin: {
+    label: "Admin",
+    badge: "bg-emerald-500 text-white",
+    avatar: "bg-emerald-600 text-white",
+    dropdownBadge: "border-emerald-300 text-emerald-700 bg-emerald-50",
+  },
 };
 
 export function UserSwitcher() {
@@ -35,29 +43,26 @@ export function UserSwitcher() {
     .map((n) => n[0])
     .join("");
 
-  const colors = roleColors[currentUser.role] || roleColors.entry;
+  const config = roleConfig[currentUser.role] || roleConfig.entry;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className={`flex items-center gap-2 h-8 px-2.5 rounded-md ${colors.bg} hover:opacity-90 transition-opacity`}>
+        <button className="flex items-center gap-2 h-8 px-2.5 rounded-md bg-slate-800 hover:bg-slate-700 transition-colors outline-none">
           <Avatar className="h-5 w-5">
-            <AvatarFallback className={`text-[9px] font-bold ${colors.avatar}`}>{initials}</AvatarFallback>
+            <AvatarFallback className={`text-[9px] font-bold ${config.avatar}`}>{initials}</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col items-start leading-none">
-            <span className="text-xs font-medium text-white">{currentUser.name}</span>
-            <span className={`text-[10px] ${colors.text}`}>{roleLabels[currentUser.role]}</span>
-          </div>
-          <Badge variant="outline" className={`text-[10px] ${colors.border} ${colors.text} px-1.5 py-0 ml-1`}>
-            {roleLabels[currentUser.role]}
+          <span className="text-xs font-medium text-slate-200">{currentUser.name}</span>
+          <Badge className={`text-[10px] font-semibold px-1.5 py-0 ${config.badge} border-0`}>
+            {config.label}
           </Badge>
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Switch User</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {users.map((user) => {
-          const userColors = roleColors[user.role] || roleColors.entry;
+          const userConfig = roleConfig[user.role] || roleConfig.entry;
           return (
             <DropdownMenuItem
               key={user.id}
@@ -68,8 +73,8 @@ export function UserSwitcher() {
                 <span>{user.name}</span>
                 <span className="text-xs text-muted-foreground">{user.email}</span>
               </div>
-              <Badge variant="outline" className={`ml-auto text-xs ${user.role === "approver" ? "border-amber-300 text-amber-700" : user.role === "admin" ? "border-emerald-300 text-emerald-700" : "border-blue-300 text-blue-700"}`}>
-                {roleLabels[user.role]}
+              <Badge variant="outline" className={`ml-auto text-[10px] ${userConfig.dropdownBadge}`}>
+                {userConfig.label}
               </Badge>
             </DropdownMenuItem>
           );

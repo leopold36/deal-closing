@@ -94,6 +94,7 @@ export function ChatPanel({ dealId }: Props) {
     mutateMessages();
     mutate(`/api/deals/${dealId}`);
     mutate(`/api/deals/${dealId}/audit`);
+    mutate(`/api/deals/${dealId}/suggestions`);
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -46,6 +46,7 @@ export const auditLogs = sqliteTable("audit_logs", {
       "CREATED",
       "FIELD_UPDATED",
       "AGENT_EXTRACTED",
+      "AGENT_SUGGESTED",
       "SUBMITTED",
       "APPROVED",
       "REJECTED",
@@ -59,6 +60,21 @@ export const auditLogs = sqliteTable("audit_logs", {
   documentPage: integer("document_page"),
   comment: text("comment"),
   timestamp: text("timestamp").notNull(),
+});
+
+export const suggestions = sqliteTable("suggestions", {
+  id: text("id").primaryKey(),
+  dealId: text("deal_id").references(() => deals.id),
+  fieldName: text("field_name").notNull(),
+  suggestedValue: text("suggested_value").notNull(),
+  documentId: text("document_id").references(() => documents.id),
+  documentPage: integer("document_page"),
+  status: text("status", {
+    enum: ["pending", "accepted", "dismissed"],
+  })
+    .notNull()
+    .default("pending"),
+  createdAt: text("created_at").notNull(),
 });
 
 export const notifications = sqliteTable("notifications", {

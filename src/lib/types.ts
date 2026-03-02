@@ -50,6 +50,17 @@ export type Notification = {
   createdAt: string;
 };
 
+export type Suggestion = {
+  id: string;
+  dealId: string;
+  fieldName: string;
+  suggestedValue: string;
+  documentId: string | null;
+  documentPage: number | null;
+  status: "pending" | "accepted" | "dismissed";
+  createdAt: string;
+};
+
 export const DEAL_FIELDS = [
   { key: "name", label: "Deal Name", type: "text" },
   { key: "counterparty", label: "Counterparty", type: "text" },

@@ -247,6 +247,28 @@ export function DealForm({ dealId }: Props) {
         </Badge>
       </div>
 
+      {/* Status banner */}
+      {deal.status === "entry" && (
+        <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+          <span className="font-semibold">Data Entry Mode</span> — Fill in the deal fields below. Once complete, submit for approval by the Portfolio Manager.
+        </div>
+      )}
+      {deal.status === "pending_approval" && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <span className="font-semibold">Pending Approval</span> — This deal is awaiting review by the Portfolio Manager.
+        </div>
+      )}
+      {deal.status === "approved" && (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+          <span className="font-semibold">Approved</span> — This deal has been approved by the Portfolio Manager.
+        </div>
+      )}
+      {deal.status === "rejected" && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+          <span className="font-semibold">Rejected</span> — This deal was sent back for revision. Update the fields and resubmit.
+        </div>
+      )}
+
       {/* Column headers */}
       <div className="grid grid-cols-[140px_160px_1fr_28px_180px] gap-2 items-center">
         <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
@@ -358,9 +380,9 @@ export function DealForm({ dealId }: Props) {
           <Button
             onClick={handleSubmitForApproval}
             size="sm"
-            className="h-7 text-xs"
+            className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4"
           >
-            Submit for Approval
+            Submit for Approval of Portfolio Manager
           </Button>
         )}
         {deal.status === "pending_approval" && (

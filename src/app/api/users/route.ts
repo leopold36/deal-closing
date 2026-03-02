@@ -5,16 +5,8 @@ import { v4 as uuid } from "uuid";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
-  try {
-    const allUsers = await db.select().from(users);
-    return NextResponse.json(allUsers);
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    const cause = error instanceof Error && error.cause instanceof Error ? error.cause.message : undefined;
-    const dbUrl = process.env.DATABASE_URL || "NOT SET";
-    const masked = dbUrl.replace(/:([^@]+)@/, ':***@');
-    return NextResponse.json({ error: message, cause, dbUrl: masked }, { status: 500 });
-  }
+  const allUsers = await db.select().from(users);
+  return NextResponse.json(allUsers);
 }
 
 export async function POST(req: Request) {

@@ -50,6 +50,7 @@ export const auditLogs = pgTable("audit_logs", {
       "SUBMITTED",
       "APPROVED",
       "REJECTED",
+      "RECALLED",
     ],
   }).notNull(),
   fieldName: text("field_name"),

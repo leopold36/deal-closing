@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Check, X, CheckCircle2, Trash2, FlaskConical } from "lucide-react";
+import { Check, X, CheckCircle2, Trash2, FlaskConical, Undo2 } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -129,6 +129,17 @@ export function DealForm({ dealId }: Props) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: currentUser.id, comment }),
+    });
+    mutateDeal();
+    mutate(`/api/deals/${dealId}/audit`);
+  };
+
+  const handleRecall = async () => {
+    if (!currentUser) return;
+    await fetch(`/api/deals/${dealId}/recall`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: currentUser.id }),
     });
     mutateDeal();
     mutate(`/api/deals/${dealId}/audit`);
@@ -385,7 +396,7 @@ export function DealForm({ dealId }: Props) {
             Submit for Approval of Portfolio Manager
           </Button>
         )}
-        {deal.status === "pending_approval" && (
+        {deal.status === "pending_approval" && currentUser?.role === "approver" && (
           <>
             <Button
               onClick={handleApprove}
@@ -404,6 +415,17 @@ export function DealForm({ dealId }: Props) {
               Reject
             </Button>
           </>
+        )}
+        {deal.status === "pending_approval" && currentUser?.role === "entry" && (
+          <Button
+            onClick={handleRecall}
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+          >
+            <Undo2 className="h-3 w-3 mr-1.5" />
+            Recall Submission
+          </Button>
         )}
         {deal.status === "approved" && (
           <p className="text-xs text-emerald-600 font-medium">

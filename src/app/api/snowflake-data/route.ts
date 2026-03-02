@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { deals, users, auditLogs } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const allDeals = await db.select().from(deals).orderBy(desc(deals.createdAt));
 

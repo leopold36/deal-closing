@@ -19,3 +19,16 @@ export async function GET(req: Request) {
 
   return NextResponse.json(messages);
 }
+
+export async function DELETE(req: Request) {
+  const url = new URL(req.url);
+  const dealId = url.searchParams.get("dealId");
+
+  if (!dealId) {
+    return NextResponse.json({ error: "dealId required" }, { status: 400 });
+  }
+
+  await db.delete(chatMessages).where(eq(chatMessages.dealId, dealId));
+
+  return NextResponse.json({ success: true });
+}

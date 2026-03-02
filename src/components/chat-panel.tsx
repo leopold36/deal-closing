@@ -7,7 +7,7 @@ import { ChatMessage } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Upload, Bot, User } from "lucide-react";
+import { Send, Upload, Bot, User, RotateCcw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -147,10 +147,10 @@ export function ChatPanel({ dealId }: Props) {
                   </div>
                 )}
                 <div
-                  className={`rounded-md px-2.5 py-1.5 max-w-[85%] text-xs ${
+                  className={`rounded-md px-2.5 py-1.5 max-w-[85%] ${
                     msg.role === "user"
-                      ? "bg-slate-700 text-white whitespace-pre-wrap"
-                      : "bg-muted prose prose-xs prose-neutral dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_pre]:my-1 [&_pre]:p-2 [&_pre]:rounded [&_pre]:bg-slate-900/5 [&_code]:text-[11px] [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_p]:text-xs [&_li]:text-xs"
+                      ? "bg-slate-700 text-white whitespace-pre-wrap text-xs"
+                      : "bg-muted chat-markdown"
                   }`}
                 >
                   {msg.role === "assistant" ? (
@@ -171,7 +171,7 @@ export function ChatPanel({ dealId }: Props) {
                 <div className="mt-0.5 p-1 rounded bg-muted shrink-0">
                   <Bot className="h-3 w-3" />
                 </div>
-                <div className="rounded-md px-2.5 py-1.5 max-w-[85%] text-xs bg-muted prose prose-xs prose-neutral dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_pre]:my-1 [&_pre]:p-2 [&_pre]:rounded [&_pre]:bg-slate-900/5 [&_code]:text-[11px] [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_p]:text-xs [&_li]:text-xs">
+                <div className="rounded-md px-2.5 py-1.5 max-w-[85%] bg-muted chat-markdown">
                   <ReactMarkdown>{streamingText}</ReactMarkdown>
                 </div>
               </div>
@@ -207,6 +207,19 @@ export function ChatPanel({ dealId }: Props) {
             disabled={streaming}
           >
             <Upload className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-7 w-7"
+            onClick={async () => {
+              await fetch(`/api/agent/messages?dealId=${dealId}`, { method: "DELETE" });
+              mutateMessages([], false);
+            }}
+            disabled={streaming || messages.length === 0}
+            title="Clear chat"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
           </Button>
           <Input
             value={input}

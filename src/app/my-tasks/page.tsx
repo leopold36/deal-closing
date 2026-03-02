@@ -18,7 +18,7 @@ export default function MyTasksPage() {
   const myEntryDeals = deals.filter(
     (d) =>
       d.createdBy === currentUser.id &&
-      (d.status === "entry" || d.status === "rejected")
+      (d.status === "entry" || d.status === "rejected" || d.status === "recalled")
   );
 
   const myApprovalDeals = deals.filter(
@@ -53,10 +53,16 @@ export default function MyTasksPage() {
                       className={`text-[11px] ${
                         deal.status === "rejected"
                           ? "bg-red-500/10 text-red-700 border-red-200"
+                          : deal.status === "recalled"
+                          ? "bg-violet-500/10 text-violet-700 border-violet-200"
                           : "bg-blue-500/10 text-blue-700 border-blue-200"
                       }`}
                     >
-                      {deal.status === "rejected" ? "Rejected — needs revision" : "In progress"}
+                      {deal.status === "rejected"
+                        ? "Rejected — needs revision"
+                        : deal.status === "recalled"
+                        ? "Recalled — ready to resubmit"
+                        : "In progress"}
                     </Badge>
                   </CardContent>
                 </Card>

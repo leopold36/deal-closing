@@ -10,27 +10,50 @@ import {
 import { useUser } from "@/lib/user-context";
 import { cn } from "@/lib/utils";
 import useSWR from "swr";
+import { Deal } from "@/lib/types";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function NotificationBell() {
   const { currentUser } = useUser();
-  const { data: notifications = [] } = useSWR(
+  const { data: notifications = [], mutate: mutateNotifications } = useSWR(
     currentUser ? `/api/notifications?userId=${currentUser.id}` : null,
     fetcher,
     { refreshInterval: 5000 }
   );
+  const { data: deals = [] } = useSWR<Deal[]>("/api/deals", fetcher, {
+    refreshInterval: 5000,
+  });
 
-  const unreadCount = notifications.filter((n: { read: boolean }) => !n.read).length;
+  // Badge count = actual pending tasks for this user
+  const taskCount = currentUser
+    ? deals.filter((d) => {
+        const isMyEntry =
+          d.createdBy === currentUser.id &&
+          (d.status === "entry" || d.status === "rejected" || d.status === "recalled");
+        const isMyApproval =
+          d.assignedApprover === currentUser.id &&
+          d.status === "pending_approval";
+        return isMyEntry || isMyApproval;
+      }).length
+    : 0;
+
+  async function markAllRead() {
+    if (!currentUser || notifications.length === 0) return;
+    await fetch(`/api/notifications?userId=${currentUser.id}`, {
+      method: "PATCH",
+    });
+    mutateNotifications();
+  }
 
   return (
-    <Popover>
+    <Popover onOpenChange={(open) => { if (open) markAllRead(); }}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative h-7 w-7 text-slate-400 hover:text-white hover:bg-white/10">
           <Bell className="h-3.5 w-3.5" />
-          {unreadCount > 0 && (
+          {taskCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-red-500 text-[9px] text-white flex items-center justify-center font-medium">
-              {unreadCount}
+              {taskCount}
             </span>
           )}
         </Button>

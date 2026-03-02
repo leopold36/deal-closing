@@ -12,6 +12,19 @@ export async function POST(
   const { userId } = await req.json();
   const now = new Date().toISOString();
 
+  // Only entry users can submit deals
+  const [submitter] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, userId));
+
+  if (!submitter || submitter.role !== "entry") {
+    return NextResponse.json(
+      { error: "Only data entry users can submit deals" },
+      { status: 403 }
+    );
+  }
+
   const [approver] = await db
     .select()
     .from(users)

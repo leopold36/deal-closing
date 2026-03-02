@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { notifications } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const userId = url.searchParams.get("userId");
@@ -18,4 +20,20 @@ export async function GET(req: Request) {
     .orderBy(desc(notifications.createdAt));
 
   return NextResponse.json(results);
+}
+
+export async function PATCH(req: Request) {
+  const url = new URL(req.url);
+  const userId = url.searchParams.get("userId");
+
+  if (!userId) {
+    return NextResponse.json({ error: "userId required" }, { status: 400 });
+  }
+
+  await db
+    .update(notifications)
+    .set({ read: true })
+    .where(eq(notifications.userId, userId));
+
+  return NextResponse.json({ success: true });
 }

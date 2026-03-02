@@ -406,7 +406,7 @@ export function DealForm({ dealId }: Props) {
       </div>
 
       <div className="flex gap-2 pt-3 border-t">
-        {(deal.status === "entry" || deal.status === "recalled") && (
+        {(deal.status === "entry" || deal.status === "recalled") && currentUser?.role === "entry" && (
           <Button
             onClick={handleSubmitForApproval}
             disabled={actionLoading === "submit"}

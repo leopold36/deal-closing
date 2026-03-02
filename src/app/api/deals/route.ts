@@ -4,6 +4,8 @@ import { deals, auditLogs } from "@/db/schema";
 import { v4 as uuid } from "uuid";
 import { desc, eq } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const allDeals = await db.select().from(deals).orderBy(desc(deals.createdAt));
   return NextResponse.json(allDeals);

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { deals, auditLogs } from "@/db/schema";
+import { deals, auditLogs, notifications, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 
@@ -12,10 +12,14 @@ export async function POST(
   const { userId } = await req.json();
   const now = new Date().toISOString();
 
+  // Get the deal to find assigned approver before clearing it
+  const [deal] = await db.select().from(deals).where(eq(deals.id, id));
+  const approverId = deal?.assignedApprover;
+
   await db
     .update(deals)
     .set({
-      status: "entry",
+      status: "recalled",
       assignedApprover: null,
       updatedAt: now,
     })
@@ -29,6 +33,17 @@ export async function POST(
     source: "manual",
     timestamp: now,
   });
+
+  // Notify the approver that the deal was recalled
+  if (approverId) {
+    await db.insert(notifications).values({
+      id: uuid(),
+      userId: approverId,
+      dealId: id,
+      message: `Deal "${deal.name}" was recalled to data entry`,
+      createdAt: now,
+    });
+  }
 
   return NextResponse.json({ status: "recalled" });
 }

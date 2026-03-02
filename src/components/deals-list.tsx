@@ -13,6 +13,7 @@ const statusColors: Record<string, string> = {
   pending_approval: "bg-amber-500/10 text-amber-700 border-amber-200",
   approved: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
   rejected: "bg-red-500/10 text-red-700 border-red-200",
+  recalled: "bg-violet-500/10 text-violet-700 border-violet-200",
 };
 
 const statusLabels: Record<string, string> = {
@@ -20,6 +21,7 @@ const statusLabels: Record<string, string> = {
   pending_approval: "Pending Approval",
   approved: "Approved",
   rejected: "Rejected",
+  recalled: "Recalled",
 };
 
 export function DealsList() {

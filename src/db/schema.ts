@@ -17,7 +17,7 @@ export const deals = pgTable("deals", {
   settlementDate: text("settlement_date"),
   notes: text("notes"),
   status: text("status", {
-    enum: ["entry", "pending_approval", "approved", "rejected"],
+    enum: ["entry", "pending_approval", "approved", "rejected", "recalled"],
   })
     .notNull()
     .default("entry"),

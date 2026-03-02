@@ -1,4 +1,4 @@
-export type DealStatus = "entry" | "pending_approval" | "approved" | "rejected";
+export type DealStatus = "entry" | "pending_approval" | "approved" | "rejected" | "recalled";
 
 export type Deal = {
   id: string;

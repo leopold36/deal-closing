@@ -7,8 +7,36 @@ import { ChatMessage } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Upload, Bot, User, RotateCcw } from "lucide-react";
+import { Send, Upload, Bot, User, RotateCcw, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { UploadDialog } from "@/components/upload-dialog";
+import { SampleDocument } from "@/lib/sample-documents";
+
+const FIELD_LABELS: Record<string, string> = {
+  name: "Deal Name",
+  counterparty: "Counterparty",
+  equityTicker: "Equity Ticker",
+  investmentAmount: "Investment Amount",
+  dealDate: "Deal Date",
+  settlementDate: "Settlement Date",
+  notes: "Notes",
+};
+
+const FIELD_MARKER_RE = /\[FIELD:(\w+)\]\s*[^\n]*/g;
+
+function parseFieldMarkers(text: string) {
+  const fields: string[] = [];
+  let match;
+  while ((match = FIELD_MARKER_RE.exec(text)) !== null) {
+    fields.push(match[1]);
+  }
+  FIELD_MARKER_RE.lastIndex = 0;
+  return fields;
+}
+
+function stripFieldMarkers(text: string) {
+  return text.replace(/\[FIELD:\w+\]\s*[^\n]*/g, "").trim();
+}
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -21,6 +49,7 @@ export function ChatPanel({ dealId }: Props) {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -96,6 +125,7 @@ export function ChatPanel({ dealId }: Props) {
     mutate(`/api/deals/${dealId}`);
     mutate(`/api/deals/${dealId}/audit`);
     mutate(`/api/deals/${dealId}/suggestions`);
+    mutate(`/api/deals/${dealId}/documents`);
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,18 +136,42 @@ export function ChatPanel({ dealId }: Props) {
     formData.append("file", file);
     formData.append("userId", currentUser.id);
 
-    await fetch(`/api/deals/${dealId}/documents`, {
+    const res = await fetch(`/api/deals/${dealId}/documents`, {
       method: "POST",
       body: formData,
     });
+    const doc = await res.json();
+
+    mutate(`/api/deals/${dealId}/documents`);
 
     await sendMessage(
-      `I've uploaded a document: "${file.name}". Please extract any relevant deal information from it.`
+      `I've uploaded a document: "${file.name}" (document ID: ${doc.id}). Please read it and tell me which deal fields you can extract from it.`
+    );
+  };
+
+  const handleSelectSample = async (sample: SampleDocument) => {
+    if (!currentUser) return;
+
+    const res = await fetch("/api/sample-documents/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sampleId: sample.id,
+        dealId,
+        userId: currentUser.id,
+      }),
+    });
+    const doc = await res.json();
+
+    mutate(`/api/deals/${dealId}/documents`);
+
+    await sendMessage(
+      `I've uploaded a document: "${sample.filename}" (document ID: ${doc.id}). Please read it and tell me which deal fields you can extract from it.`
     );
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white rounded-lg border">
       <div className="p-2 border-b bg-muted/30 flex items-center gap-2">
         <Bot className="h-3.5 w-3.5" />
         <span className="text-xs font-medium">Deal Assistant</span>
@@ -134,38 +188,77 @@ export function ChatPanel({ dealId }: Props) {
                 </p>
               </div>
             )}
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex gap-2 ${
-                  msg.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                {msg.role === "assistant" && (
-                  <div className="mt-0.5 p-1 rounded bg-muted shrink-0">
-                    <Bot className="h-3 w-3" />
-                  </div>
-                )}
+            {messages.map((msg) => {
+              const fields =
+                msg.role === "assistant"
+                  ? parseFieldMarkers(msg.content)
+                  : [];
+              const cleanContent =
+                fields.length > 0
+                  ? stripFieldMarkers(msg.content)
+                  : msg.content;
+
+              return (
                 <div
-                  className={`rounded-md px-2.5 py-1.5 max-w-[85%] ${
-                    msg.role === "user"
-                      ? "bg-slate-700 text-white whitespace-pre-wrap text-xs"
-                      : "bg-muted chat-markdown"
+                  key={msg.id}
+                  className={`flex gap-2 ${
+                    msg.role === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  {msg.role === "assistant" ? (
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
-                  ) : (
-                    msg.content
+                  {msg.role === "assistant" && (
+                    <div className="mt-0.5 p-1 rounded bg-muted shrink-0">
+                      <Bot className="h-3 w-3" />
+                    </div>
+                  )}
+                  <div
+                    className={`rounded-md px-2.5 py-1.5 max-w-[85%] ${
+                      msg.role === "user"
+                        ? "bg-slate-700 text-white whitespace-pre-wrap text-xs"
+                        : "bg-muted chat-markdown"
+                    }`}
+                  >
+                    {msg.role === "assistant" ? (
+                      <>
+                        <ReactMarkdown>{cleanContent}</ReactMarkdown>
+                        {fields.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {fields.map((f) => (
+                              <button
+                                key={f}
+                                onClick={() =>
+                                  sendMessage(
+                                    `Please extract the value for: ${FIELD_LABELS[f] ?? f}`
+                                  )
+                                }
+                                disabled={streaming}
+                                className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-medium text-blue-700 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                              >
+                                <FileText className="h-3 w-3" />
+                                {FIELD_LABELS[f] ?? f}
+                              </button>
+                            ))}
+                            <button
+                              onClick={() => sendMessage("Please extract all fields you found.")}
+                              disabled={streaming}
+                              className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                            >
+                              Extract All
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      msg.content
+                    )}
+                  </div>
+                  {msg.role === "user" && (
+                    <div className="mt-0.5 p-1 rounded bg-slate-700 shrink-0">
+                      <User className="h-3 w-3 text-white" />
+                    </div>
                   )}
                 </div>
-                {msg.role === "user" && (
-                  <div className="mt-0.5 p-1 rounded bg-slate-700 shrink-0">
-                    <User className="h-3 w-3 text-white" />
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
             {streaming && streamingText && (
               <div className="flex gap-2 justify-start">
                 <div className="mt-0.5 p-1 rounded bg-muted shrink-0">
@@ -203,7 +296,7 @@ export function ChatPanel({ dealId }: Props) {
             variant="outline"
             size="icon"
             className="h-7 w-7"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => setUploadDialogOpen(true)}
             disabled={streaming}
           >
             <Upload className="h-4 w-4" />
@@ -239,6 +332,14 @@ export function ChatPanel({ dealId }: Props) {
           </Button>
         </div>
       </div>
+
+      <UploadDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        onSelectSample={handleSelectSample}
+        onUploadOwn={() => fileInputRef.current?.click()}
+        disabled={streaming}
+      />
     </div>
   );
 }

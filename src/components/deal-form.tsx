@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import useSWR, { mutate } from "swr";
 import { useUser } from "@/lib/user-context";
-import { Deal, AuditLog, Suggestion, FieldApproval, DEAL_FIELDS } from "@/lib/types";
+import { Deal, AuditLog, Suggestion, FieldApproval, Document, DEAL_FIELDS } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,17 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, X, Undo2, Lightbulb, Loader2, History } from "lucide-react";
+import {
+  Check,
+  X,
+  Undo2,
+  Lightbulb,
+  Loader2,
+  History,
+  FileText,
+  FileSpreadsheet,
+  File,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -66,6 +76,11 @@ export function DealForm({ dealId }: Props) {
     FieldApproval[]
   >(
     shouldFetchApprovals ? `/api/deals/${dealId}/field-approvals` : null,
+    fetcher
+  );
+
+  const { data: documents = [] } = useSWR<Document[]>(
+    `/api/deals/${dealId}/documents`,
     fetcher
   );
 
@@ -207,7 +222,7 @@ export function DealForm({ dealId }: Props) {
     : "grid-cols-[100px_1fr_150px]";
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 bg-white rounded-lg border p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold">{deal.name}</h2>
         <Badge
@@ -485,6 +500,49 @@ export function DealForm({ dealId }: Props) {
           </Sheet>
         </div>
       </div>
+
+      {/* Documents section */}
+      {documents.length > 0 && (
+        <div className="pt-3 border-t">
+          <div className="flex items-center gap-2 mb-2">
+            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Documents
+            </span>
+            <Badge
+              variant="secondary"
+              className="text-[10px] px-1.5 py-0 h-4 font-medium"
+            >
+              {documents.length}
+            </Badge>
+          </div>
+          <div className="space-y-1">
+            {documents.map((doc) => {
+              const IconComponent = doc.mimeType?.includes("pdf")
+                ? FileText
+                : doc.mimeType?.includes("spreadsheet") ||
+                    doc.mimeType?.includes("csv")
+                  ? FileSpreadsheet
+                  : File;
+
+              return (
+                <div
+                  key={doc.id}
+                  className="flex items-center gap-2 rounded border px-2.5 py-1.5 bg-muted/30"
+                >
+                  <IconComponent className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="text-[11px] font-medium truncate flex-1">
+                    {doc.filename}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">
+                    {new Date(doc.uploadedAt).toLocaleDateString()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

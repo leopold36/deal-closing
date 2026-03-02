@@ -61,6 +61,16 @@ export type Suggestion = {
   createdAt: string;
 };
 
+export type Document = {
+  id: string;
+  dealId: string;
+  filename: string;
+  filepath: string;
+  mimeType: string | null;
+  uploadedBy: string | null;
+  uploadedAt: string;
+};
+
 export type FieldApproval = {
   id: string;
   dealId: string;

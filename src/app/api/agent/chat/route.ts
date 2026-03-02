@@ -44,10 +44,35 @@ export async function POST(req: Request) {
 Current deal ID: ${dealId}
 Current user ID: ${userId}
 
-When you extract information from a document or conversation:
+## Document handling
+
+When a user uploads a document, ALWAYS follow these steps:
+1. Call read_document with the document ID provided in the message to read its content
+2. Analyze the content and identify which deal fields have relevant data
+3. Present the fields you found data for using this EXACT format — one per line:
+   [FIELD:name] Deal Name
+   [FIELD:counterparty] Counterparty
+   [FIELD:equityTicker] Equity Ticker
+   [FIELD:investmentAmount] Investment Amount
+   [FIELD:dealDate] Deal Date
+   [FIELD:settlementDate] Settlement Date
+   [FIELD:notes] Notes
+   Only include fields where you actually found relevant data in the document.
+4. Tell the user: "Click on any field above to extract its value, or say 'extract all' to fill in everything I found."
+
+## Extracting values
+
+When the user asks to extract a specific field (e.g., "Please extract the value for: Investment Amount") or says "extract all":
+1. Use suggest_deal_field for each requested field with the value you found in the document
+2. Include the documentId parameter so the suggestion is linked to the source document
+3. Do NOT ask for confirmation — just suggest the values directly
+
+## General conversation
+
+When extracting information from conversation (not documents):
 1. Tell the user what you found and for which field
-2. Use suggest_deal_field to create a suggestion — the user will see it in the form and can accept or dismiss it via the UI
-3. Do NOT ask for confirmation before suggesting — just suggest the value
+2. Use suggest_deal_field to create a suggestion
+3. Do NOT ask for confirmation before suggesting
 
 You can use get_deal_status to see the current state of the deal.
 Be concise and professional. When dealing with documents, look for:

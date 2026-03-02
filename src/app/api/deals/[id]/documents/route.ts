@@ -3,8 +3,7 @@ import { db } from "@/db";
 import { documents } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { supabase, DOCUMENTS_BUCKET } from "@/lib/supabase";
 
 export async function GET(
   _req: Request,
@@ -31,25 +30,39 @@ export async function POST(
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  const uploadDir = path.join(process.cwd(), "uploads", id);
-  await mkdir(uploadDir, { recursive: true });
-
   const filename = file.name;
-  const filepath = path.join(uploadDir, filename);
+  const storagePath = `${id}/${filename}`;
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(filepath, buffer);
+
+  const { error: uploadError } = await supabase.storage
+    .from(DOCUMENTS_BUCKET)
+    .upload(storagePath, buffer, {
+      contentType: file.type,
+      upsert: true,
+    });
+
+  if (uploadError) {
+    console.error("Supabase upload error:", uploadError.message);
+    return NextResponse.json(
+      { error: "Failed to upload file" },
+      { status: 500 }
+    );
+  }
 
   const docId = uuid();
   await db.insert(documents).values({
     id: docId,
     dealId: id,
     filename,
-    filepath: `uploads/${id}/${filename}`,
+    filepath: storagePath,
     mimeType: file.type,
     uploadedBy: userId,
     uploadedAt: new Date().toISOString(),
   });
 
-  const [doc] = await db.select().from(documents).where(eq(documents.id, docId));
+  const [doc] = await db
+    .select()
+    .from(documents)
+    .where(eq(documents.id, docId));
   return NextResponse.json(doc, { status: 201 });
 }

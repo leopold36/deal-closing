@@ -1,9 +1,10 @@
 import { tool, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod/v4";
 import { db } from "@/db";
-import { deals, auditLogs, notifications, users, suggestions } from "@/db/schema";
+import { deals, auditLogs, notifications, users, suggestions, documents } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
+import { readDocumentAsText } from "@/lib/document-reader";
 
 const getDealStatus = tool(
   "get_deal_status",
@@ -130,8 +131,48 @@ const sendNotification = tool(
   }
 );
 
+const readDocument = tool(
+  "read_document",
+  "Read the text content of an uploaded document. Use this to extract deal information from uploaded files.",
+  {
+    documentId: z.string().describe("The document ID to read"),
+  },
+  async ({ documentId }) => {
+    const [doc] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, documentId));
+    if (!doc) {
+      return {
+        content: [{ type: "text" as const, text: "Document not found" }],
+      };
+    }
+
+    try {
+      const text = await readDocumentAsText(doc.filepath);
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `Document: ${doc.filename}\n\n${text}`,
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `Failed to read document: ${String(error)}`,
+          },
+        ],
+      };
+    }
+  }
+);
+
 export const agentMcpServer = createSdkMcpServer({
   name: "deal-closing-tools",
   version: "1.0.0",
-  tools: [getDealStatus, suggestDealField, sendNotification],
+  tools: [getDealStatus, suggestDealField, sendNotification, readDocument],
 });

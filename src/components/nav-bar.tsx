@@ -21,11 +21,11 @@ export function NavBar() {
   return (
     <header className="bg-slate-900 text-white border-b border-slate-800">
       <div className="flex h-10 items-center px-4">
-        <div className="flex items-center gap-2 mr-6">
+        <Link href="/deals" className="flex items-center gap-2 mr-6 hover:opacity-80 transition-opacity">
           <span className="text-sm font-bold tracking-wide">LGT</span>
           <span className="text-slate-500">|</span>
           <span className="font-semibold text-sm tracking-tight">Deal Closing</span>
-        </div>
+        </Link>
         <nav className="flex items-center gap-0.5">
           {navItems.map((item) => (
             <Link

@@ -149,7 +149,11 @@ export function DealForm({ dealId }: Props) {
 
   if (!deal) return <p className="text-muted-foreground">Loading...</p>;
 
-  const isEditable = deal.status === "entry" || deal.status === "rejected" || deal.status === "pending_approval" || deal.status === "recalled";
+  const isEntryPhase = deal.status === "entry" || deal.status === "rejected" || deal.status === "recalled";
+  const isApprovalPhase = deal.status === "pending_approval";
+  const isEditable =
+    (isEntryPhase && currentUser?.role !== "approver") ||
+    (isApprovalPhase && currentUser?.role === "approver");
 
   const getSuggestionForField = (fieldName: string) =>
     pendingSuggestions.find((s) => s.fieldName === fieldName);

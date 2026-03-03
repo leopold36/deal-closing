@@ -171,8 +171,10 @@ const readDocument = tool(
   }
 );
 
-export const agentMcpServer = createSdkMcpServer({
-  name: "deal-closing-tools",
-  version: "1.0.0",
-  tools: [getDealStatus, suggestDealField, sendNotification, readDocument],
-});
+export function createAgentMcpServer() {
+  return createSdkMcpServer({
+    name: "deal-closing-tools",
+    version: "1.0.0",
+    tools: [getDealStatus, suggestDealField, sendNotification, readDocument],
+  });
+}

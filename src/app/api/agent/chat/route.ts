@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import { agentMcpServer } from "@/lib/agent-tools";
+import { createAgentMcpServer } from "@/lib/agent-tools";
 import { db } from "@/db";
 import { chatMessages } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -8,6 +8,8 @@ import { v4 as uuid } from "uuid";
 
 // Allow Agent SDK to spawn claude subprocess even inside a Claude Code session
 delete process.env.CLAUDECODE;
+
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   const { message, dealId, userId } = await req.json();
@@ -94,7 +96,7 @@ Be concise and professional. When dealing with documents, look for:
         permissionMode: "bypassPermissions",
         allowDangerouslySkipPermissions: true,
         mcpServers: {
-          "deal-closing-tools": agentMcpServer,
+          "deal-closing-tools": createAgentMcpServer(),
         },
       },
     });

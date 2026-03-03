@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Upload, Bot, User, RotateCcw, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { UploadDialog } from "@/components/upload-dialog";
 import { SampleDocument } from "@/lib/sample-documents";
 
@@ -259,7 +260,7 @@ export function ChatPanel({ dealId }: Props) {
                   >
                     {msg.role === "assistant" ? (
                       <>
-                        <ReactMarkdown>{cleanContent}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanContent}</ReactMarkdown>
                         {fields.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-2">
                             {fields.map((f) => (
@@ -305,7 +306,7 @@ export function ChatPanel({ dealId }: Props) {
                   <Bot className="h-3 w-3" />
                 </div>
                 <div className="rounded-md px-2.5 py-1.5 max-w-[85%] bg-white border chat-markdown">
-                  <ReactMarkdown>{streamingText}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamingText}</ReactMarkdown>
                 </div>
               </div>
             )}

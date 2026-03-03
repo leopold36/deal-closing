@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
-import { query } from "@anthropic-ai/claude-agent-sdk";
-import { createAgentMcpServer } from "@/lib/agent-tools";
+import Anthropic from "@anthropic-ai/sdk";
+import { toolDefinitions, executeToolCall } from "@/lib/agent-tools";
 import { db } from "@/db";
 import { chatMessages } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 
-// Allow Agent SDK to spawn claude subprocess even inside a Claude Code session
-delete process.env.CLAUDECODE;
-
 export const maxDuration = 60;
+
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY?.trim(),
+});
 
 export async function POST(req: Request) {
   const { message, dealId, userId } = await req.json();
@@ -86,42 +87,57 @@ Be concise and professional. When dealing with documents, look for:
 - Key terms and conditions for the notes field`;
 
   try {
-    const q = query({
-      prompt,
-      options: {
-        model: "claude-sonnet-4-6",
-        systemPrompt,
-        maxTurns: 5,
-        tools: [],
-        permissionMode: "bypassPermissions",
-        allowDangerouslySkipPermissions: true,
-        mcpServers: {
-          "deal-closing-tools": createAgentMcpServer(),
-        },
-      },
-    });
-
     let fullResponse = "";
-
     const encoder = new TextEncoder();
-    const stream = new ReadableStream({
+
+    const responseStream = new ReadableStream({
       async start(controller) {
         try {
-          for await (const msg of q) {
-            if (msg.type === "assistant") {
-              const text = msg.message.content.reduce((acc, block) => {
-                if (block.type === "text") {
-                  return acc + block.text;
-                }
-                return acc;
-              }, "");
+          const messages: Anthropic.MessageParam[] = [
+            { role: "user", content: prompt },
+          ];
 
-              if (text && text !== fullResponse) {
-                const newText = text.slice(fullResponse.length);
-                fullResponse = text;
-                const data = `data: ${JSON.stringify({ text: newText })}\n\n`;
-                controller.enqueue(encoder.encode(data));
+          const MAX_TURNS = 5;
+          for (let turn = 0; turn < MAX_TURNS; turn++) {
+            const stream = client.messages.stream({
+              model: "claude-sonnet-4-6",
+              max_tokens: 4096,
+              system: systemPrompt,
+              tools: toolDefinitions,
+              messages,
+            });
+
+            stream.on("text", (textDelta) => {
+              fullResponse += textDelta;
+              const data = `data: ${JSON.stringify({ text: textDelta })}\n\n`;
+              controller.enqueue(encoder.encode(data));
+            });
+
+            const response = await stream.finalMessage();
+
+            if (response.stop_reason === "tool_use") {
+              // Add assistant message to conversation
+              messages.push({ role: "assistant", content: response.content });
+
+              // Execute tool calls and collect results
+              const toolResults: Anthropic.ToolResultBlockParam[] = [];
+              for (const block of response.content) {
+                if (block.type === "tool_use") {
+                  const result = await executeToolCall(
+                    block.name,
+                    block.input as Record<string, unknown>
+                  );
+                  toolResults.push({
+                    type: "tool_result",
+                    tool_use_id: block.id,
+                    content: result,
+                  });
+                }
               }
+
+              messages.push({ role: "user", content: toolResults });
+            } else {
+              break;
             }
           }
 
@@ -147,7 +163,7 @@ Be concise and professional. When dealing with documents, look for:
       },
     });
 
-    return new Response(stream, {
+    return new Response(responseStream, {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",

@@ -50,7 +50,7 @@ export function ChatPanel({ dealId }: Props) {
   const [streaming, setStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: messages = [], mutate: mutateMessages } = useSWR<
@@ -58,9 +58,7 @@ export function ChatPanel({ dealId }: Props) {
   >(`/api/agent/messages?dealId=${dealId}`, fetcher);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingText]);
 
   const sendMessage = async (text: string) => {
@@ -221,7 +219,7 @@ export function ChatPanel({ dealId }: Props) {
     <div className="flex flex-col h-full bg-white">
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div ref={scrollRef} className="p-3 space-y-3">
+          <div className="p-3 space-y-3">
             {messages.length === 0 && !streaming && (
               <div className="text-center text-muted-foreground text-xs py-6">
                 <Bot className="h-6 w-6 mx-auto mb-2 opacity-50" />
@@ -321,6 +319,7 @@ export function ChatPanel({ dealId }: Props) {
                 </div>
               </div>
             )}
+            <div ref={bottomRef} />
           </div>
         </ScrollArea>
       </div>

@@ -49,7 +49,7 @@ export default function DealDetailPage({
             <X className="h-3 w-3" />
           </Button>
         </div>
-        <div className="flex-1 min-w-[340px]">
+        <div className="flex-1 min-w-[340px] min-h-0 overflow-hidden">
           <ChatPanel dealId={id} />
         </div>
       </div>
